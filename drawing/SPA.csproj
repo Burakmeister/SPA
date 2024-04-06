@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="DesignEntities\" />
     <Folder Include="Views\" />
   </ItemGroup>
 
