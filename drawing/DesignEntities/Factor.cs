@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace SPA.DesignEntities
 {
-    public class Factor : Expr
+    public abstract class Factor : Expr
     {
+        protected Factor(int lineNumber) : base(lineNumber)
+        {
+        }
     }
 }
