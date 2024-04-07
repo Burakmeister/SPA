@@ -1,7 +1,9 @@
 ﻿using ICSharpCode.AvalonEdit.Document;
+using Microsoft.Win32;
 using SPA.ViewModels;
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -12,14 +14,36 @@ namespace SPA.ViewModels
 {
     public class Drawer : ViewModel, IDrawer
     {
-        private string _code="";
+        public Drawer() {
+            OpenFileCommand = new RelayCommand(OpenFile);
+        }
+
+        private TextDocument _document = null;
         public TextDocument Document
         {
-            get { return _code; }
+            get { return this._document; }
             set
             {
-                _code = value; 
-                OnPropertyChanged("Document");
+                if (this._document != value)
+                {
+                    this._document = value;
+                    OnPropertyChanged("Document");
+                   
+                }
+            }
+        }
+
+        public ICommand OpenFileCommand { get; private set; }
+
+        private void OpenFile()
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*";
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string filePath = openFileDialog.FileName;
+                string fileContent = File.ReadAllText(filePath);
+                Document = new TextDocument(fileContent);
             }
         }
     }
