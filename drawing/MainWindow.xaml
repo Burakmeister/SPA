@@ -1,13 +1,16 @@
-﻿<Window x:Class="drawing.MainWindow"
+﻿<Window x:Class="SPA.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:avalon="http://icsharpcode.net/sharpdevelop/avalonedit"
+        xmlns:local="clr-namespace:SPA"  
         Title="MainWindow" Height="600" Width="1000">
     
+
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="File">
-                <MenuItem Header="Save" Command="{Binding LoadFileCommand}"/>
+                <MenuItem Header="New" Command="{Binding NewDocumentCommand}"/>
+                <MenuItem Header="Save" Command="{Binding SaveFileCommand}"/>
                 <MenuItem Header="Open" Command="{Binding LoadFileCommand}"/>
             </MenuItem>
         </Menu>
@@ -18,10 +21,59 @@
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
 
-            <TextBox>
-                
-            </TextBox>
-            
+
+            <!--<RichTextBox AcceptsTab="True" AcceptsReturn="True" AllowDrop="True" Foreground="White" BorderBrush="#FF00238C" SelectionBrush="#FF66CA6C" Background="#FF2B2B2B" Padding="15,15,15,15" VerticalScrollBarVisibility="Auto" FontFamily="Consolas">
+                <RichTextBox.Resources>
+                    <Style TargetType="{x:Type Paragraph}">
+                        <Setter Property="Margin" Value="0"/>
+                    </Style>
+                </RichTextBox.Resources>
+            </RichTextBox> -->
+
+            <avalon:TextEditor ShowLineNumbers="True" Foreground="White" Background="#FF2B2B2B" FontFamily="Consolas" LineNumbersForeground="#FFC3C3C3" BorderBrush="#FF00C0CE" 
+                               HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" OpacityMask="#FF00C0CE" SyntaxHighlighting="{Binding HighlightingDefinition, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                                IsReadOnly="False" DataContext="{Binding DocumentRoot}"
+                                Document="{Binding Document, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                               >
+                <avalon:TextEditor.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Command="Cut" Header="Cut">
+                            <!--MenuItem.Icon>
+                                <Image Source="/Edi;component/Images/App/Edit_Cut32.png" Height="16"/>
+                            </MenuItem.Icon-->
+                        </MenuItem>
+                        <MenuItem Command="Copy" Header="Copy">
+                            <!--MenuItem.Icon>
+                                <Image Source="/Edi;component/Images/App/Edit_Copy32.png" Height="16"/>
+                            </MenuItem.Icon-->
+                        </MenuItem>
+                        <MenuItem Command="Paste" Header="Paste">
+                            <!--MenuItem.Icon>
+                                <Image Source="/Edi;component/Images/App/Edit_Paste32.png" Height="16"/>
+                            </MenuItem.Icon-->
+                        </MenuItem>
+                        <MenuItem Command="Delete" Header="Delete">
+                            <!--MenuItem.Icon>
+                                <Image Source="/Edi;component/Images/App/Edit_Delete32.png" Height="16"/>
+                                    </MenuItem.Icon-->
+                        </MenuItem>
+
+                        <Separator />
+
+                        <MenuItem Command="Undo" Header="Undo">
+                            <!--MenuItem.Icon>
+                                <Image Source="/Edi;component/Images/App/Edit_Undo32.png" Height="16"/>
+                                    </MenuItem.Icon-->
+                        </MenuItem>
+                        <MenuItem Command="Redo" Header="Redo">
+                            <!--MenuItem.Icon>
+                                <Image Source="/Edi;component/Images/App/Edit_Redo32.png" Height="16"/>
+                                    </MenuItem.Icon-->
+                        </MenuItem>
+                    </ContextMenu>
+                </avalon:TextEditor.ContextMenu>
+            </avalon:TextEditor>
+
             <GridSplitter HorizontalAlignment="Right" 
                   VerticalAlignment="Stretch" 
                   Grid.Column="1" ResizeBehavior="PreviousAndNext"

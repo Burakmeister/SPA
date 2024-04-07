@@ -14,6 +14,8 @@
 
   <ItemGroup>
 
+    <PackageReference Include="AvalonEdit" Version="6.3.0.90" />
+
     <PackageReference Include="Expression.Blend.Sdk.WPF" Version="1.0.1" />
     <PackageReference Include="Extended.Wpf.Toolkit" Version="4.5.0" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.77" />

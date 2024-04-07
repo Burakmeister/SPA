@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace drawing.ViewModels
+namespace SPA.ViewModels
 {
     public interface IDrawer
     {
