@@ -1,4 +1,4 @@
-﻿using SPA.parser;
+﻿using SPA.Parsing;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,7 +11,7 @@ namespace SPA.ViewModels
     public class Drawer : IDrawer
     {
         public string Code { get; set; } = "";
-        public Parser Parser { get; } = new();
+        public IParser Parser { get; } = new Parser();
         public ICommand ParseCommand => new Command((param) =>
         {
             Parser.Parse(Code);
