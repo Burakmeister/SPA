@@ -6,19 +6,14 @@ using System.Threading.Tasks;
 
 namespace SPA.DesignEntities
 {
-    public abstract class Statement
+    public abstract class Statement : TNode
     {
-        int lineNumber;
-
-        Statement nextStatement;
-
-        protected Statement(int lineNumber, Statement nextStatement)
-        {
-            this.lineNumber = lineNumber;
-            this.nextStatement = nextStatement;
-        }
-
         public int LineNumber { get; set; }
+        public Statement? NextStatement { get; set; }
 
+        protected Statement(int lineNumber)
+        {
+            this.LineNumber = lineNumber;
+        }
     }
 }
