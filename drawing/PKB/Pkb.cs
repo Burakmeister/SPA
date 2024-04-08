@@ -1,4 +1,5 @@
 ﻿using SPA.DesignEntities;
+using SPA.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -299,7 +300,9 @@ namespace SPA.PKB
             }
             else
             {
-                throw new Exception(); 
+                OutOfBoundsIndexException e = new OutOfBoundsIndexException();
+                e.Index = index;
+                throw e;
             }
         }
 
