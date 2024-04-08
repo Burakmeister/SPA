@@ -8,12 +8,11 @@ namespace SPA.DesignEntities
 {
     public class While : Statement
     {
-        private Variable Var{ get; }
-        private StatementList StatementList { get; }
-        public While(int lineNumber, Variable var, StatementList statementList) : base(lineNumber)
+        public Variable Var{ get; private set; }
+        public StatementList? StatementList { get; set; }
+        public While(int lineNumber, Variable var) : base(lineNumber)
         {
             this.Var = var;
-            this.StatementList = statementList;
         }
     }
 }

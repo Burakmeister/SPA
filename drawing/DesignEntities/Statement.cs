@@ -9,7 +9,7 @@ namespace SPA.DesignEntities
     public abstract class Statement : TNode
     {
         public int LineNumber { get; set; }
-        protected Statement? NextStatement { get; set; }
+        public Statement? NextStatement { get; set; }
 
         protected Statement(int lineNumber)
         {

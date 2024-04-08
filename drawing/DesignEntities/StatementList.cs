@@ -8,7 +8,7 @@ namespace SPA.DesignEntities
 {
     public class StatementList
     {
-        private Statement FirstStatement { get; set; }
+        public Statement FirstStatement { get; set; }
         public StatementList(Statement FirstStatement)
         {
             this.FirstStatement = FirstStatement;
