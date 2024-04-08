@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Input;
 
-namespace SPA.ViewModels
+namespace SPA.QueryProcessor
 {
-    public interface IDrawer
+    internal class QueryEvaluator
     {
-        ICommand ParseCommand { get; }
     }
 }

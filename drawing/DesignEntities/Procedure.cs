@@ -8,14 +8,13 @@ namespace SPA.DesignEntities
 {
     public class Procedure : TNode
     {
-        private string ProcName { get;}
-        private StatementList StatementList { get;}
-        private Procedure? NextProcedure { get; set; }
+        public string ProcName { get; private set; }
+        public StatementList? StatementList { get; set; }
+        public Procedure? NextProcedure { get; set; }
 
-        public Procedure(string procName, StatementList statementList)
+        public Procedure(string procName)
         {
             ProcName = procName;
-            StatementList = statementList;
         }
     }
 }

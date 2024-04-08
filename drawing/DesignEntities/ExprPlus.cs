@@ -6,14 +6,12 @@ using System.Threading.Tasks;
 
 namespace SPA.DesignEntities
 {
-    class ExprPlus : Expr
+    public class ExprPlus : Expr
     {
-        private Expr LeftExpr { get; }
-        private Expr RightExpr { get; }
-        public ExprPlus(int lineNumber, Expr leftExpr, Expr rightExpr) : base(lineNumber)
+        public Expr? LeftExpr { get; set; }
+        public Expr? RightExpr { get; set; }
+        public ExprPlus(int lineNumber) : base(lineNumber)
         {
-            LeftExpr = leftExpr;
-            RightExpr = rightExpr;
         }
     }
 }

@@ -8,7 +8,7 @@ namespace SPA.DesignEntities
 {
     public class Constant : Factor
     {
-        private int Value { get; }
+        public int Value { get; private set; }
         public Constant(int value, int lineNumber) : base(lineNumber)
         {
             Value = value;

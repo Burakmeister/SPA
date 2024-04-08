@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SPA.DesignEntities
 {
-    class Call
+    public class Call
     {
     }
 }

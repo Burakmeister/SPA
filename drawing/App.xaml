@@ -1,7 +1,7 @@
-﻿<Application x:Class="drawing.App"
+﻿<Application x:Class="SPA.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:drawing"
+             xmlns:local="clr-namespace:SPA"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <Style TargetType="Button">
