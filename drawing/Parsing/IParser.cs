@@ -10,11 +10,10 @@ namespace SPA.Parsing
 {
     public interface IParser
     {
-        void Parse(string input);
-        Procedure createProcedure(ArrayList stringList);
+        Assign createAssign();
         Program createProgram();
-        While createWhile(Variable var, string[] code);
-        ExprPlus createExprPlus(Expr left, Expr right);
-        Assign createAssign(Variable var, Expr expr);
+        While createWhile(ArrayList stringsList);
+        void Parse(string code);
+        Procedure createProcedure(ArrayList stringsList);
     }
 }

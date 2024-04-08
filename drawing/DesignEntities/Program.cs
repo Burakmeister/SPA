@@ -8,8 +8,6 @@ namespace SPA.DesignEntities
 {
     public class Program
     {
-        public Procedure? FirstProcedure { get; set; }
-        public Program() {
-        }
+        public Procedure? FirstProcedure { get; set; } = null;
     }
 }

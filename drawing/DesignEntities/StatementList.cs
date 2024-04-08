@@ -8,10 +8,6 @@ namespace SPA.DesignEntities
 {
     public class StatementList
     {
-        public Statement FirstStatement { get; set; }
-        public StatementList(Statement FirstStatement)
-        {
-            this.FirstStatement = FirstStatement;
-        }
+        public Statement? FirstStatement { get; set; } = null;
     }
 }
