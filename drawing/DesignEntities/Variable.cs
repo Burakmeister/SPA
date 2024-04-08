@@ -8,11 +8,13 @@ namespace SPA.DesignEntities
 {
     public class Variable : Factor
     {
-        private string VarName { get; }
+        public string VarName { get; }
 
-        public Variable(string name, int lineNumber) : base(lineNumber) { 
+        public Variable(string name, int lineNumber) : base(lineNumber)
         {
-            VarName = name;
+            {
+                VarName = name;
+            }
         }
     }
 }
