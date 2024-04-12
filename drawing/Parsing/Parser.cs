@@ -179,7 +179,7 @@ namespace SPA.Parsing
                 i++;
             }
             i++;
-            for(; i<stringsList.Count-1; i++)
+            for(; i<stringsList.Count; i++)
             {
                 if(stringsList[i] as string == "{") bracketCounter++;
                 if(stringsList[i] as string == "}" && bracketCounter == 0)
