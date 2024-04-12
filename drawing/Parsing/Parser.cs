@@ -12,22 +12,28 @@ namespace SPA.Parsing
 {
     public class Parser : IParser
     {
-        public Program? program = null;
+        public Program? program { get; set; } = null;
+        private int numOfLines = 100;
 
-        public Assign createAssign()
+        public Assign CreateAssign()
         {
             return new Assign(0, new Variable("xd", 0));
         }
 
 
-        public Program createProgram()
+        public Program CreateProgram()
         {
             return new Program();
         }
 
-        public While createWhile(ArrayList stringsList)
+        public Program? GetProgram()
         {
-            if (stringsList[^1] as string == "}" && stringsList[2] as string == "{" && isNameAccepted(stringsList[1] as string))
+            return program;
+        }
+
+        public While CreateWhile(ArrayList stringsList)
+        {
+            if (stringsList[^1] as string == "}" && stringsList[2] as string == "{" && IsNameAccepted(stringsList[1] as string))
             {
                 Variable var = new Variable((stringsList[1] as string)!, 0);
                 While newWhile = new While(0, var);
@@ -42,12 +48,12 @@ namespace SPA.Parsing
                         int whileStart = i;
                         int whileLength = findClosingBracket(stringsList.GetRange(whileStart, stringsList.Count - whileStart));
                         i += whileLength;
-                        statement = createWhile(stringsList.GetRange(whileStart, whileLength));
+                        statement = CreateWhile(stringsList.GetRange(whileStart, whileLength));
                     }
                     else
                     {
-                        statement = createAssign();
-                        while ((stringsList[i] as string)[1] != ';')
+                        statement = CreateAssign();
+                        while ((stringsList[i] as string)![1] != ';')
                         {
                             i++;
                         }
@@ -72,7 +78,7 @@ namespace SPA.Parsing
             }
         }
 
-        private bool isNameAccepted(string? name)
+        private bool IsNameAccepted(string? name)
         {
             if(name==null) return false;
             if(name.Length > 0 && ((name[0]>64 && name[0] < 91) || (name[0] > 96 && name[0] < 123)))
@@ -82,13 +88,13 @@ namespace SPA.Parsing
             return false;
         }
 
-        public void Parse(string code) {
+        public int Parse(string code) {
             string strippedCode = Regex.Replace(code, @"\r\n?|\n|\t", " ");
             strippedCode = Regex.Replace(strippedCode, @"\s+"," ");
             string[] strings = strippedCode.Split(' ');
             Procedure? procedure;
             Procedure? prevProcedure = null;
-            program = createProgram();
+            program = CreateProgram();
             ArrayList stringsList = new(strings);
 
             for(int i = 0; i < stringsList.Count; i++)
@@ -98,8 +104,8 @@ namespace SPA.Parsing
                     int procedureStart = i;
                     int procedureLength = findClosingBracket(stringsList.GetRange(procedureStart, stringsList.Count - procedureStart));
                     i += procedureLength;
-                    procedure = createProcedure(stringsList.GetRange(procedureStart, procedureLength));
-                    if (program.FirstProcedure == null)
+                    procedure = CreateProcedure(stringsList.GetRange(procedureStart, procedureLength));
+                    if (program!.FirstProcedure == null)
                     {
                         program.FirstProcedure = procedure;
                     }
@@ -111,11 +117,12 @@ namespace SPA.Parsing
                     i++;
                 }
             }
+            return numOfLines;
         }
 
-        public Procedure createProcedure(ArrayList stringsList)
+        public Procedure CreateProcedure(ArrayList stringsList)
         {
-            if (stringsList[^1] as string == "}" && stringsList[2] as string == "{" && isNameAccepted(stringsList[1] as string))
+            if (stringsList[^1] as string == "}" && stringsList[2] as string == "{" && IsNameAccepted(stringsList[1] as string))
             {
                 Procedure newProcedure = new Procedure((stringsList[1] as string)!);
                 StatementList statementList = new StatementList();
@@ -134,11 +141,11 @@ namespace SPA.Parsing
                             i++;
                             whileLength++;
                         }
-                        statement = createWhile(stringsList.GetRange(whileStart, whileLength));
+                        statement = CreateWhile(stringsList.GetRange(whileStart, whileLength));
                     }
                     else
                     {
-                        statement = createAssign();
+                        statement = CreateAssign();
                         while ((stringsList[i] as string)!.Length==1)
                         {
                             i++;

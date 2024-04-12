@@ -10,6 +10,8 @@ namespace SPA.PKB
 {
     public class Pkb : IPkb
     {
+        public Program? program { get; set; } = null;
+
         private static Pkb instance;
         private string[] varTable;
         private string[] procTable;
@@ -23,7 +25,7 @@ namespace SPA.PKB
         private int[] modifies;
 
         // konstruktor zapobiegający kolejnym instancjom
-        public Pkb(int statementCount)
+        private Pkb(int statementCount)
         {
             varTable = new string[100];
             procTable = new string[50];

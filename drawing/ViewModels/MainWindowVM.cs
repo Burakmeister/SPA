@@ -18,6 +18,7 @@ namespace SPA.ViewModels
     {
 
         public IDrawer Drawer { get; set; }
+        public IDrawerAST DrawerAST{ get; set; }
 
         public MainWindowVM(IIoC ioc)
         {
