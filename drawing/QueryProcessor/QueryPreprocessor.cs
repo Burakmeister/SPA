@@ -140,7 +140,7 @@ namespace SPA.QueryProcessor
             return clause;
         }
 
-        private Relation ValidateRelation()
+        public Relation ValidateRelation()
         {
             Token relToken = PeekToken();
 
@@ -308,7 +308,7 @@ namespace SPA.QueryProcessor
             return new Token(tokenType, parts[0]);
         }
 
-        private void Advance(int numTokens = 1)
+        public void Advance(int numTokens = 1)
         {
             // Służy do przesuwania pozycji analizatora
             // o określoną liczbę tokenów do przodu
@@ -316,7 +316,7 @@ namespace SPA.QueryProcessor
             position += parts[numTokens].Length + 1;
         }
 
-        private string Peek(int numTokens = 1)
+        public string Peek(int numTokens = 1)
         {
             // Służy do sprawdzenia n-tego słowa w zapytaniu,
             // bez konieczności przesuwania pozycji analizatora

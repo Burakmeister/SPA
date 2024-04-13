@@ -19,5 +19,10 @@ namespace SPA.QueryProcessor
             
             
         }
+
+        internal object Substring(object position)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
