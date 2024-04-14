@@ -12,7 +12,9 @@ namespace SPA.QueryProcessor
         NAME,
         INTEGER,
         SYMBOL,
-        EOF
+        EOF,
+        STRING,
+        ExpectedType
     }
     internal class Token
     {
