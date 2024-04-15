@@ -26,12 +26,13 @@ namespace SPA.Parsing
             return program;
         }
 
-        public While CreateWhile(int lineNumber, ArrayList stringsList)
+        public While CreateWhile(ArrayList stringsList)
         {
             if (stringsList[^1] as string == "}" && stringsList[2] as string == "{" && IsNameAccepted(stringsList[1] as string))
             {
                 Variable var = new Variable((stringsList[1] as string)!, lineNumber);
                 While newWhile = new While(lineNumber, var);
+                lineNumber++;
                 StatementList statementList = new StatementList();
                 newWhile.StatementList = statementList;
                 Statement? statement = null ;
@@ -42,14 +43,14 @@ namespace SPA.Parsing
                     {
                         int whileStart = i;
                         int whileLength = FindClosingBracket(stringsList.GetRange(whileStart, stringsList.Count - whileStart)) + 1;
-                        statement = CreateWhile(lineNumber, stringsList.GetRange(whileStart, whileLength));
+                        statement = CreateWhile(stringsList.GetRange(whileStart, whileLength));
                         i += whileLength;
                     }
                     else
                     {
                         int assignStart = i;
                         int assignLength = FindSemicolon(stringsList.GetRange(assignStart, stringsList.Count - assignStart)) + 1;
-                        statement = CreateAssign(lineNumber, stringsList.GetRange(assignStart, assignLength));
+                        statement = CreateAssign(stringsList.GetRange(assignStart, assignLength));
                         i+= assignLength;
                     }
                     lineNumber++;
@@ -82,18 +83,18 @@ namespace SPA.Parsing
             return false;
         }
 
-        public Assign CreateAssign(int lineNumber, ArrayList stringsList)
+        public Assign CreateAssign(ArrayList stringsList)
         {
             if ((stringsList[^1] as string)!.EndsWith(';') && stringsList[1] as string == "=" && IsNameAccepted(stringsList[0] as string))
             {
                 string varName = (stringsList[0] as string)!;
-                Expr? expr = CreateExpr(lineNumber, stringsList.GetRange(2, stringsList.Count-2));
+                Expr? expr = CreateExpr(stringsList.GetRange(2, stringsList.Count-2));
                 return new Assign(lineNumber, varName, expr);
             }
             throw new Exception("Nieprawidłowo zdefiniowane przypisanie!");
         }
 
-        public Expr? CreateExpr(int lineNumber, ArrayList stringsList)
+        public Expr? CreateExpr(ArrayList stringsList)
         {
             ArrayList exprType = new ArrayList();
             ArrayList vars = new ArrayList();
@@ -188,7 +189,7 @@ namespace SPA.Parsing
                 {
                     int procedureStart = i;
                     int procedureLength = FindClosingBracket(stringsList.GetRange(procedureStart, stringsList.Count - procedureStart));
-                    procedure = CreateProcedure(lineNumber, stringsList.GetRange(procedureStart, procedureLength));
+                    procedure = CreateProcedure(stringsList.GetRange(procedureStart, procedureLength));
                     if (program!.FirstProcedure == null)
                     {
                         program.FirstProcedure = procedure;
@@ -204,7 +205,7 @@ namespace SPA.Parsing
             return lineNumber;
         }
 
-        public Procedure CreateProcedure(int lineNumber, ArrayList stringsList)
+        public Procedure CreateProcedure(ArrayList stringsList)
         {
             if (stringsList[^1] as string == "}" && stringsList[2] as string == "{" && IsNameAccepted(stringsList[1] as string))
             {
@@ -219,14 +220,14 @@ namespace SPA.Parsing
                     {
                         int whileStart = i;
                         int whileLength = FindClosingBracket(stringsList.GetRange(whileStart, stringsList.Count - whileStart)) + 1;
-                        statement = CreateWhile(lineNumber, stringsList.GetRange(whileStart, whileLength));
+                        statement = CreateWhile(stringsList.GetRange(whileStart, whileLength));
                         i += whileLength;
                     }
                     else
                     {
                         int assignStart = i;
                         int assignLength = FindSemicolon(stringsList.GetRange(assignStart, stringsList.Count - assignStart)) + 1;
-                        statement = CreateAssign(lineNumber, stringsList.GetRange(assignStart, assignLength));
+                        statement = CreateAssign(stringsList.GetRange(assignStart, assignLength));
                         i+= assignLength;
                     }
                     lineNumber++;
