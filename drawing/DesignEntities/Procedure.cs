@@ -10,7 +10,7 @@ namespace SPA.DesignEntities
     {
         public string ProcName { get; private set; }
         public StatementList? StatementList { get; set; }
-        public Procedure? NextProcedure { get; set; }
+        public Procedure? NextProcedure { get; set; } = null;
 
         public Procedure(string procName)
         {

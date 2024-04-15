@@ -67,13 +67,13 @@ namespace SPA.ViewModels
         {
             for(int i = 0; i<=procedures.Count; i++)
             {
-                FindProcedureVariables((Procedure)procedures[i]);
+                FindProcedureVariables((Procedure)procedures[i]!);
             }
         }
 
         private void FindProcedureVariables(Procedure procedure)
         {
-            if (procedure.StatementList.FirstStatement != null)
+            if (procedure.StatementList!.FirstStatement != null)
             {
                 FindStatementVariables(procedure.StatementList.FirstStatement);
             }
