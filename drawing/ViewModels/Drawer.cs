@@ -65,7 +65,7 @@ namespace SPA.ViewModels
 
         private void InsertVariablesIntoVarTable()
         {
-            for(int i = 0; i<=procedures.Count; i++)
+            for(int i = 0; i<procedures.Count; i++)
             {
                 FindProcedureVariables((Procedure)procedures[i]!);
             }
