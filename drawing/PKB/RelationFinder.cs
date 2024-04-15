@@ -27,6 +27,7 @@ namespace SPA.PKB
             InsertModifiesRel();
             InsertFollowsRel();
             InsertParentRel();
+            InsertUsesRel();
         }
 
         private void InsertVariablesIntoVarTable()
@@ -179,6 +180,49 @@ namespace SPA.PKB
             } else if (statement != null)
             {
                 FindStatementChildren(statement.NextStatement);
+            }
+        }
+
+        private void InsertUsesRel()
+        {
+            for (int i = 0; i < procedures.Count; i++)
+            {
+                FindUsesRelInProcedure((Procedure)procedures[i]!);
+            }
+        }
+
+        private void FindUsesRelInProcedure(Procedure procedure)
+        {
+            if (procedure.StatementList.FirstStatement != null)
+            {
+                FindStatementUses(procedure.StatementList.FirstStatement);
+            }
+        }
+
+        private void FindStatementUses(Statement statement)
+        {
+            if (statement != null && statement is Assign)
+            {
+                Assign assign = statement as Assign;
+                if (assign.Expr is Factor)
+                {
+                    Factor factor = (Factor)assign.Expr;
+                    if (factor is Variable)
+                    {
+                        Variable variable = (Variable)factor;
+                        pkb.SetUses(statement, variable);
+                    }
+                }
+                FindStatementUses(statement.NextStatement);
+
+            } else if (statement is While)
+            {
+                While stmtWhile = statement as While;
+                FindStatementUses(stmtWhile.StatementList.FirstStatement);
+            }
+            else if (statement != null)
+            {
+                FindStatementUses(statement.NextStatement);
             }
         }
     }

@@ -37,6 +37,7 @@ namespace SPA.PKB
             parents = new List<int>[statementCount];
             InitializeLists(parents);
             uses = new List<int>[statementCount];
+            InitializeLists(uses);
 
             firstEmptyProcTableIndex = 0;
             firstEmptyVarTableIndex = 0;
