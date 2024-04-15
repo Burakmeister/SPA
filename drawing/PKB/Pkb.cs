@@ -31,12 +31,21 @@ namespace SPA.PKB
             procTable = new string[50];
 
             modifies = new int[statementCount];
+            InitializeArrayWithValue(modifies, -1);
             follows = new int[statementCount];
             parents = new List<int>[statementCount];
             uses = new List<int>[statementCount];
 
             firstEmptyProcTableIndex = 0;
             firstEmptyVarTableIndex = 0;
+        }
+
+        private void InitializeArrayWithValue(int[] array, int value)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = value;
+            }
         }
 
         public static Pkb GetInstance(int statementcount)
@@ -89,9 +98,17 @@ namespace SPA.PKB
         public List<Variable> GetModified(Statement statement)
         {
             int variableIndex = modifies[statement.LineNumber];
-            string variableName = varTable[variableIndex];
-            Variable var = new Variable(variableName,0);
-            return new List<Variable>() { var };
+            if (variableIndex >= 0)
+            {
+                string variableName = varTable[variableIndex];
+                Variable var = new Variable(variableName, 0);
+                return new List<Variable>() { var };
+            }
+            else
+            {
+                    throw new OutOfBoundsIndexException();
+            }
+
         }
 
         public List<int> GetModifies(Variable variable)
