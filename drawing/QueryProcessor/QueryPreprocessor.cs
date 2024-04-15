@@ -37,7 +37,7 @@ namespace SPA.QueryProcessor
                     (arg1, arg2) => new FollowsT { StmtRef = arg1, StmtRef2 = arg2 },
                     null)
                 },
-                { "Parent",
+                { "Parent", 
                     (2, new[] { "IDENT", "_", "INTEGER" }, new[] { "IDENT", "_", "INTEGER" },
                     (arg1, arg2) => new Parent { StmtRef = arg1, StmtRef2 = arg2 },
                     null)
@@ -70,12 +70,15 @@ namespace SPA.QueryProcessor
         // Parsing
         private void ValidateQuery()
         {
+            // Tutaj powinno być peek() na deklaracje bo są opcjonalne!!
+            // Wsm bez różnicy, to strata pamięci wielkości małej listy
             _query.Declarations = ValidateDeclarations();
             Match("Select");
+            Advance();
             _query.Synonym = Match(TokenType.IDENT).Value;
-
+            Advance();
             // Sprawdź dwa następne tokeny
-            if (Peek(2) == "such that")
+            if (Peek(1) == "such" && Peek(2) == "that") 
             {
                 Advance(2);
                 _query.SuchThatClause = ValidateSuchThatClause();
@@ -124,6 +127,7 @@ namespace SPA.QueryProcessor
             synonyms.Add(Match(TokenType.IDENT).Value);
 
             // W przypadku kolejnych synonyms:
+            Advance();
             while (Peek() == ",")
             {
                 Advance();
@@ -280,11 +284,15 @@ namespace SPA.QueryProcessor
         private Token PeekToken()
         {
             // Służy do sprawdzenia typu tokena w zapytaniu
-            string[] parts = query.Substring(position).Trim().Split(' ');
+            //string[] parts = query.Substring(position).Trim().Split(' ');
+            string input = position < query.Length ? query.Substring(position).Trim() : query[position - 1].ToString();
+            string pattern = @"(\s+|;|\.|\(|\))"; // separatory
+            string[] parts = Regex.Split(input, pattern);
+            parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
 
             // Jeśli tablica jest pusta, osiągnięto
             // koniec zapytania:
-            if (parts.Length == 0)
+            if (input.Length == 0)
             {
                 return new Token(TokenType.EOF, "");
             }
@@ -296,7 +304,7 @@ namespace SPA.QueryProcessor
                 tokenType = TokenType.INTEGER;
             }
             // IDENT może być w cudzysłowiu lub bez
-            else if (Regex.IsMatch(parts[0], @"^\""[a-zA-Z][a-zA-Z0-9#]*\""$") || Regex.IsMatch(parts[0], @"^[a-zA-Z][a-zA-Z0-9#]*$"))
+            else if (Regex.IsMatch(parts[0], @"^\""[a-zA-Z][a-zA-Z0-9#]*\""$|^[a-zA-Z][a-zA-Z0-9#]*$"))
             {
                 tokenType = TokenType.IDENT;
             }
@@ -312,8 +320,16 @@ namespace SPA.QueryProcessor
         {
             // Służy do przesuwania pozycji analizatora
             // o określoną liczbę tokenów do przodu
-            string[] parts = query.Substring(position).Trim().Split(' ');
-            position += parts[numTokens].Length + 1;
+            string input = position < query.Length ? query.Substring(position).Trim() : query[position - 1].ToString();
+            string pattern = @"(\s+|;|\.|\(|\))"; // separatory
+            string[] parts = Regex.Split(input, pattern);
+            parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
+            position += parts[numTokens - 1].Length;
+
+            //if (position < query.Length && parts.Length < numTokens)
+            //{
+            //    position++;  // Przesunięcie za separator, jeśli to konieczne
+            //}
         }
 
         private string Peek(int numTokens = 1)
@@ -321,10 +337,13 @@ namespace SPA.QueryProcessor
             // Służy do sprawdzenia n-tego słowa w zapytaniu,
             // bez konieczności przesuwania pozycji analizatora
             // Dzielenie tokenów:
-            string[] parts = query.Substring(position).Trim().Split(' ');
-            if (parts.Length > numTokens)   // jeśli możliwe jest sprawdzenie n-tego tokena
+            string input = position < query.Length ? query.Substring(position).Trim() : query[position - 1].ToString();
+            string pattern = @"(\s+|;|\.|\(|\))"; // separatory
+            string[] parts = Regex.Split(input, pattern);
+            parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
+            if (parts.Length > 0 && numTokens <= parts.Length)   // jeśli możliwe jest sprawdzenie n-tego tokena
             {
-                return parts[numTokens];
+                return parts[numTokens - 1];
             }
             else
             {

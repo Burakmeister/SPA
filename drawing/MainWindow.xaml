@@ -19,9 +19,9 @@
             </Grid.ColumnDefinitions>
 
             <TextBox>
-                
+
             </TextBox>
-            
+
             <GridSplitter HorizontalAlignment="Right" 
                   VerticalAlignment="Stretch" 
                   Grid.Column="1" ResizeBehavior="PreviousAndNext"
@@ -35,6 +35,12 @@
                             <TextBlock>PQL</TextBlock>
                         </StackPanel>
                     </TabItem.Header>
+                    <TabItem.Content>
+                        <StackPanel>
+                            <TextBox x:Name="QueryTextBox" Margin="10" Height="200" VerticalAlignment="Top" HorizontalAlignment="Stretch" Text="{Binding Drawer.codeQuery, Mode=TwoWay}"/>
+                            <Button x:Name="ExecuteQueryButton" Margin="10" VerticalAlignment="Top" HorizontalAlignment="Right" Command="{Binding Drawer.executeQueryCmnd}" Content="Execute Query"/>
+                        </StackPanel>
+                    </TabItem.Content>
                 </TabItem>
                 <TabItem>
                     <TabItem.Header>

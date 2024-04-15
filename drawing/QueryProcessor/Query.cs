@@ -13,11 +13,5 @@ namespace SPA.QueryProcessor
         public SuchThat SuchThatClause { get; set; }
         public With WithClause { get; set; }
 
-
-        public Query()
-        {
-            
-            
-        }
     }
 }

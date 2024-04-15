@@ -15,9 +15,9 @@ namespace SPA.QueryProcessor
         // String do testu parsowania w preprocessorze
         private readonly string query;
 
-        public QueryProcessor()
+        public QueryProcessor(string query)
         {
-            query = "ulala";
+            this.query = query;
 
             _query = new Query();
             _preprocessor = new QueryPreprocessor(query, _query);

@@ -1,4 +1,5 @@
 ﻿using drawing.ViewModels;
+using SPA.QueryProcessor;
 using System.Windows;
 
 namespace drawing
