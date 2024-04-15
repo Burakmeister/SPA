@@ -33,7 +33,9 @@ namespace SPA.PKB
             modifies = new int[statementCount];
             InitializeArrayWithValue(modifies, -1);
             follows = new int[statementCount];
+            InitializeArrayWithValue(follows, -1);
             parents = new List<int>[statementCount];
+            InitializeLists(parents);
             uses = new List<int>[statementCount];
 
             firstEmptyProcTableIndex = 0;
@@ -45,6 +47,14 @@ namespace SPA.PKB
             for (int i = 0; i < array.Length; i++)
             {
                 array[i] = value;
+            }
+        }
+
+        private void InitializeLists(List<int>[] lists)
+        {
+            for (int i = 0; i < lists.Length; i++)
+            {
+                lists[i] = new List<int>();
             }
         }
 
