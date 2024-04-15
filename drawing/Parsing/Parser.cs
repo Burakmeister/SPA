@@ -15,9 +15,9 @@ namespace SPA.Parsing
         public Program? program { get; set; } = null;
         private int numOfLines = 100;
 
-        public Assign CreateAssign()
+        public Assign CreateAssign(string varName)
         {
-            return new Assign(0, new Variable("xd", 0));
+            return new Assign(0, new Variable(varName, 0));
         }
 
 
@@ -52,7 +52,7 @@ namespace SPA.Parsing
                     }
                     else
                     {
-                        statement = CreateAssign();
+                        statement = CreateAssign(stringsList[i] as string);
                         while ((stringsList[i] as string)![1] != ';')
                         {
                             i++;
@@ -145,7 +145,7 @@ namespace SPA.Parsing
                     }
                     else
                     {
-                        statement = CreateAssign();
+                        statement = CreateAssign(stringsList[i] as string);
                         while ((stringsList[i] as string)!.Length==1)
                         {
                             i++;

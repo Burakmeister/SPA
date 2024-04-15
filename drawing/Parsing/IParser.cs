@@ -10,7 +10,7 @@ namespace SPA.Parsing
 {
     public interface IParser
     {
-        Assign CreateAssign();
+        Assign CreateAssign(string varName);
         Program CreateProgram();
         Program? GetProgram();
         While CreateWhile(ArrayList stringsList);

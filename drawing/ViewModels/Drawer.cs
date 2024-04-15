@@ -29,6 +29,7 @@ namespace SPA.ViewModels
                 numOfLines = Parser.Parse(Code);
                 CompleteProceduresList();
                 pkb = Pkb.GetInstance(numOfLines);
+                InsertVariablesIntoVarTable();
                 currentIndex = 0;
                 DrawerAST.DrawTree(procedures[currentIndex] as Procedure);
             }
@@ -60,6 +61,60 @@ namespace SPA.ViewModels
                 }
             }
 
+        }
+
+        private void InsertVariablesIntoVarTable()
+        {
+            for(int i = 0; i<=procedures.Count; i++)
+            {
+                FindProcedureVariables((Procedure)procedures[i]);
+            }
+        }
+
+        private void FindProcedureVariables(Procedure procedure)
+        {
+            if (procedure.StatementList.FirstStatement != null)
+            {
+                FindStatementVariables(procedure.StatementList.FirstStatement);
+            }
+        }
+
+        private void FindStatementVariables(Statement statement)
+        {
+
+            if (statement != null)
+            {
+                if (statement is Assign)
+                {
+                    Assign assign = statement as Assign;
+                    if (!CheckIfVarIsInVarTable(assign.Var.VarName))
+                    {
+                        pkb.InsertVariable(assign.Var.VarName);
+                        FindStatementVariables(assign.NextStatement);
+                    }
+                }
+                else if (statement is While)
+                {
+                    While stmtWhile = statement as While;
+                    if (!CheckIfVarIsInVarTable(stmtWhile.Var.VarName))
+                    {
+                        pkb.InsertVariable(stmtWhile.Var.VarName);
+                        FindStatementVariables(stmtWhile.NextStatement);
+                    }
+                }
+            }
+        }
+
+        private bool CheckIfVarIsInVarTable(string varName)
+        {
+            if(pkb.GetVariableIndex(varName) != -1)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }
