@@ -29,7 +29,7 @@ namespace SPA.ViewModels
                 numOfLines = Parser.Parse(Code);
                 CompleteProceduresList();
                 pkb = Pkb.GetInstance(numOfLines);
-                InsertVariablesIntoVarTable();
+                FillPKB();
                 currentIndex = 0;
                 DrawerAST.DrawTree(procedures[currentIndex] as Procedure);
             }
@@ -63,9 +63,15 @@ namespace SPA.ViewModels
 
         }
 
+        private void FillPKB()
+        {
+            InsertVariablesIntoVarTable();
+            InsertModifiesRel();
+        }
+
         private void InsertVariablesIntoVarTable()
         {
-            for(int i = 0; i<=procedures.Count; i++)
+            for(int i = 0; i<procedures.Count; i++)
             {
                 FindProcedureVariables((Procedure)procedures[i]!);
             }
@@ -100,6 +106,7 @@ namespace SPA.ViewModels
                     {
                         pkb.InsertVariable(stmtWhile.Var.VarName);
                         FindStatementVariables(stmtWhile.NextStatement);
+                        FindStatementVariables(stmtWhile.StatementList.FirstStatement);
                     }
                 }
             }
@@ -114,6 +121,40 @@ namespace SPA.ViewModels
             else
             {
                 return false;
+            }
+        }
+
+        private void InsertModifiesRel()
+        {
+            for (int i = 0; i < procedures.Count; i++)
+            {
+                FindModifiesRelInProcedure((Procedure)procedures[i]);
+            }
+        }
+        private void FindModifiesRelInProcedure(Procedure procedure)
+        {
+            if (procedure.StatementList.FirstStatement != null)
+            {
+                FindStatementModifies(procedure.StatementList.FirstStatement);
+            }
+        }
+
+        private void FindStatementModifies(Statement statement)
+        {
+            if (statement != null)
+            {
+                if (statement is Assign)
+                {
+                    Assign assign = statement as Assign;
+                    pkb.SetModifies(assign, assign.Var);
+                    FindStatementModifies(assign.NextStatement);
+                } else if (statement is While)
+                {
+                    While stmtWhile = statement as While;
+                    FindStatementModifies(stmtWhile.NextStatement);
+                    FindStatementModifies(stmtWhile.StatementList.FirstStatement);
+
+                }
             }
         }
     }
