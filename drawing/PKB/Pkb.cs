@@ -231,7 +231,7 @@ namespace SPA.PKB
             }
             else
             {
-                return -1; // variable name not in varTable
+                return -1; // procedure name not in procTable
             }
         }
 
@@ -283,6 +283,10 @@ namespace SPA.PKB
             int index = 0;
             while (varTable[index]!=VariableName && index<varTable.Length) {
                 index++;
+                if (index == varTable.Length)
+                {
+                    break;
+                }
             }
             if (index<varTable.Length)
             {

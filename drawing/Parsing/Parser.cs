@@ -1,4 +1,5 @@
-﻿using SPA.DesignEntities;
+﻿using Microsoft.VisualBasic;
+using SPA.DesignEntities;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,13 +14,7 @@ namespace SPA.Parsing
     public class Parser : IParser
     {
         public Program? program { get; set; } = null;
-        private int numOfLines = 100;
-
-        public Assign CreateAssign()
-        {
-            return new Assign(0, new Variable("xd", 0));
-        }
-
+        private int lineNumber;
 
         public Program CreateProgram()
         {
@@ -31,34 +26,33 @@ namespace SPA.Parsing
             return program;
         }
 
-        public While CreateWhile(ArrayList stringsList)
+        public While CreateWhile(int lineNumber, ArrayList stringsList)
         {
             if (stringsList[^1] as string == "}" && stringsList[2] as string == "{" && IsNameAccepted(stringsList[1] as string))
             {
-                Variable var = new Variable((stringsList[1] as string)!, 0);
-                While newWhile = new While(0, var);
+                Variable var = new Variable((stringsList[1] as string)!, lineNumber);
+                While newWhile = new While(lineNumber, var);
                 StatementList statementList = new StatementList();
                 newWhile.StatementList = statementList;
-                Statement? statement;
+                Statement? statement = null ;
                 Statement? prevStatement = null;
-                for (int i = 3; i < stringsList.Count - 1; i++)
+                for (int i = 3; i < stringsList.Count - 1;)
                 {
                     if (stringsList[i] as string == "while")
                     {
                         int whileStart = i;
-                        int whileLength = findClosingBracket(stringsList.GetRange(whileStart, stringsList.Count - whileStart));
+                        int whileLength = FindClosingBracket(stringsList.GetRange(whileStart, stringsList.Count - whileStart)) + 1;
+                        statement = CreateWhile(lineNumber, stringsList.GetRange(whileStart, whileLength));
                         i += whileLength;
-                        statement = CreateWhile(stringsList.GetRange(whileStart, whileLength));
                     }
                     else
                     {
-                        statement = CreateAssign();
-                        while ((stringsList[i] as string)![1] != ';')
-                        {
-                            i++;
-                        }
-                        i++;
+                        int assignStart = i;
+                        int assignLength = FindSemicolon(stringsList.GetRange(assignStart, stringsList.Count - assignStart)) + 1;
+                        statement = CreateAssign(lineNumber, stringsList.GetRange(assignStart, assignLength));
+                        i+= assignLength;
                     }
+                    lineNumber++;
 
                     if (statementList.FirstStatement == null)
                     {
@@ -88,6 +82,95 @@ namespace SPA.Parsing
             return false;
         }
 
+        public Assign CreateAssign(int lineNumber, ArrayList stringsList)
+        {
+            if ((stringsList[^1] as string)!.EndsWith(';') && stringsList[1] as string == "=" && IsNameAccepted(stringsList[0] as string))
+            {
+                string varName = (stringsList[0] as string)!;
+                Expr? expr = CreateExpr(lineNumber, stringsList.GetRange(2, stringsList.Count-2));
+                return new Assign(lineNumber, varName, expr);
+            }
+            throw new Exception("Nieprawidłowo zdefiniowane przypisanie!");
+        }
+
+        public Expr? CreateExpr(int lineNumber, ArrayList stringsList)
+        {
+            ArrayList exprType = new ArrayList();
+            ArrayList vars = new ArrayList();
+
+            int semicolonPos = FindSemicolon(stringsList);
+
+            for (int i=0; i<stringsList.Count; i++)
+            {
+                if(i%2 == 0)
+                {
+                    if (i == semicolonPos)
+                    {
+                        if(IsNameAccepted((stringsList[i] as string)![..^1]))
+                        {
+                            vars.Add(new Variable((stringsList[i] as string)![..^1], lineNumber));
+                        }
+                        else
+                        {
+                            try
+                            {
+                                int constant = int.Parse((stringsList[i] as string)![..^1]);
+                                vars.Add(new Constant(constant, lineNumber));
+                            }
+                            catch(Exception e)
+                            {
+                                throw new Exception("Nieprawidłowa nazwa zmiennej! " + "[" + lineNumber + "]");
+                            }
+                        }
+                    }
+                    else if (IsNameAccepted(stringsList[i] as string))
+                    {
+                        vars.Add(new Variable((stringsList[i] as string)!, lineNumber));
+                    }
+                    else
+                    {
+                        try
+                        {
+                            int constant = int.Parse((stringsList[i] as string)!);
+                            vars.Add(new Constant(constant, lineNumber));
+                        }
+                        catch (Exception e)
+                        {
+                            throw new Exception("Nieprawidłowa nazwa zmiennej! " + "[" + lineNumber + "]");
+                        }
+                    }
+                }
+                else
+                {
+                    if (stringsList[i] as string == "+")
+                    {
+                        exprType.Add(new ExprPlus(lineNumber));
+                    }
+                    else
+                    {
+                        throw new Exception("Nieprawidłowe równanie! " + "[" + lineNumber + "]");
+                    }
+                }
+            }
+
+            if (exprType.Count > 0)
+            {
+                for (int i = 0; i < exprType.Count-1; i++)
+                {
+                    (exprType[i] as ExprPlus)!.RightExpr = exprType[i+1] as ExprPlus;
+                }
+                (exprType[^1] as ExprPlus)!.RightExpr = vars[^1] as Factor;
+
+                for (int i = 0; i < vars.Count - 1; i++)
+                {
+                    (exprType[i] as ExprPlus)!.LeftExpr = vars[i] as Factor;
+                }
+            }else if (exprType.Count == 0 && vars.Count==1) {
+                return vars[0] as Expr;
+            }
+            return exprType[0] as Expr;
+        }
+
         public int Parse(string code) {
             string strippedCode = Regex.Replace(code, @"\r\n?|\n|\t", " ");
             strippedCode = Regex.Replace(strippedCode, @"\s+"," ");
@@ -97,14 +180,15 @@ namespace SPA.Parsing
             program = CreateProgram();
             ArrayList stringsList = new(strings);
 
-            for(int i = 0; i < stringsList.Count; i++)
+            lineNumber = 0;
+
+            for(int i = 0; i < stringsList.Count-1; i++)
             {
                 if (stringsList[i] as string == "procedure")
                 {
                     int procedureStart = i;
-                    int procedureLength = findClosingBracket(stringsList.GetRange(procedureStart, stringsList.Count - procedureStart));
-                    i += procedureLength;
-                    procedure = CreateProcedure(stringsList.GetRange(procedureStart, procedureLength));
+                    int procedureLength = FindClosingBracket(stringsList.GetRange(procedureStart, stringsList.Count - procedureStart));
+                    procedure = CreateProcedure(lineNumber, stringsList.GetRange(procedureStart, procedureLength));
                     if (program!.FirstProcedure == null)
                     {
                         program.FirstProcedure = procedure;
@@ -114,13 +198,13 @@ namespace SPA.Parsing
                         prevProcedure!.NextProcedure = procedure;
                     }
                     prevProcedure = procedure;
-                    i++;
+                    i+=procedureLength;
                 }
             }
-            return numOfLines;
+            return lineNumber;
         }
 
-        public Procedure CreateProcedure(ArrayList stringsList)
+        public Procedure CreateProcedure(int lineNumber, ArrayList stringsList)
         {
             if (stringsList[^1] as string == "}" && stringsList[2] as string == "{" && IsNameAccepted(stringsList[1] as string))
             {
@@ -129,30 +213,23 @@ namespace SPA.Parsing
                 Statement? statement;
                 Statement? prevStatement = null;
                 newProcedure.StatementList = statementList;
-                for(int i=3; i<stringsList.Count-1; i++)
+                for(int i=3; i<stringsList.Count-1;)
                 {
                     if (stringsList[i] as string == "while")
                     {
                         int whileStart = i;
-                        int whileLength = findClosingBracket(stringsList.GetRange(whileStart, stringsList.Count - whileStart));
+                        int whileLength = FindClosingBracket(stringsList.GetRange(whileStart, stringsList.Count - whileStart)) + 1;
+                        statement = CreateWhile(lineNumber, stringsList.GetRange(whileStart, whileLength));
                         i += whileLength;
-                        while (stringsList[i] as string!= "}")
-                        {
-                            i++;
-                            whileLength++;
-                        }
-                        statement = CreateWhile(stringsList.GetRange(whileStart, whileLength));
                     }
                     else
                     {
-                        statement = CreateAssign();
-                        while ((stringsList[i] as string)!.Length==1)
-                        {
-                            i++;
-                        }
-                        i++;
+                        int assignStart = i;
+                        int assignLength = FindSemicolon(stringsList.GetRange(assignStart, stringsList.Count - assignStart)) + 1;
+                        statement = CreateAssign(lineNumber, stringsList.GetRange(assignStart, assignLength));
+                        i+= assignLength;
                     }
-
+                    lineNumber++;
                     if(statementList.FirstStatement == null)
                     {
                         statementList.FirstStatement = statement;
@@ -170,7 +247,8 @@ namespace SPA.Parsing
                 throw new Exception("Nieprawidłowo zdefiniowana procedura!");
             }
         }
-        private int findClosingBracket(ArrayList stringsList)
+
+        private int FindClosingBracket(ArrayList stringsList)
         {
             int i = 0;
             int bracketCounter = 0;
@@ -192,6 +270,18 @@ namespace SPA.Parsing
                 }
             }
             throw new Exception("Brakuje klamry zamykającej!");
+        }
+
+        private int FindSemicolon(ArrayList stringsList)
+        {
+            for (int i=0; i < stringsList.Count; i++)
+            {
+                if (stringsList[i] as string == ";" || (stringsList[i] as string)!.EndsWith(';'))
+                {
+                    return i;
+                }
+            }
+            throw new Exception("Brakuje średnika!");
         }
     }
 }
