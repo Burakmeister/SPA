@@ -30,6 +30,7 @@ namespace SPA.ViewModels
                 numOfLines = Parser.Parse(Code);
                 CompleteProceduresList();
                 pkb = Pkb.GetInstance(numOfLines);
+                pkb.ClearPkb();
                 relationFinder = new RelationFinder(procedures, pkb);
                 relationFinder.FillPKB();
                 currentIndex = 0;

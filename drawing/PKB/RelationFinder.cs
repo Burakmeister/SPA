@@ -193,7 +193,7 @@ namespace SPA.PKB
 
         private void FindUsesRelInProcedure(Procedure procedure)
         {
-            if (procedure.StatementList.FirstStatement != null)
+            if (procedure.StatementList!.FirstStatement != null)
             {
                 FindStatementUses(procedure.StatementList.FirstStatement);
             }
@@ -203,27 +203,50 @@ namespace SPA.PKB
         {
             if (statement != null && statement is Assign)
             {
-                Assign assign = statement as Assign;
-                if (assign.Expr is Factor)
-                {
-                    Factor factor = (Factor)assign.Expr;
-                    if (factor is Variable)
-                    {
-                        Variable variable = (Variable)factor;
-                        pkb.SetUses(statement, variable);
-                    }
-                }
-                FindStatementUses(statement.NextStatement);
+                Assign assign = (statement as Assign)!;
+                //if (assign!.Expr is Factor)
+                //{
+                //    Factor factor = (Factor)assign.Expr;
+                //    if (factor is Variable)
+                //    {
+                //        Variable variable = (Variable)factor;
+                //        pkb!.SetUses(statement, variable);
+                //    }
+                //}
+                CheckExpr(assign, assign.Expr);
+                FindStatementUses(statement!.NextStatement!);
 
             } else if (statement is While)
             {
-                While stmtWhile = statement as While;
-                FindStatementUses(stmtWhile.StatementList.FirstStatement);
+                While stmtWhile = (statement as While)!;
+                FindStatementUses(stmtWhile!.StatementList!.FirstStatement!);
             }
             else if (statement != null)
             {
-                FindStatementUses(statement.NextStatement);
+                FindStatementUses(statement.NextStatement!);
             }
         }
+
+        private void CheckExpr(Statement statement, Expr expr)
+        {
+            if (expr is Factor)
+            {
+                Factor factor = (Factor)expr;
+                if (factor is Variable)
+                {
+                    Variable variable = (Variable)factor;
+                    pkb!.SetUses(statement, variable);
+                }
+            } else if (expr is ExprPlus)
+            {
+                ExprPlus exprPlus = (ExprPlus)expr;
+                CheckExpr(statement, exprPlus.LeftExpr);
+                CheckExpr(statement, exprPlus.RightExpr);
+            }
+        }
+
+        // zrób liste variable (w metodzie wyżej) i dodawaj expr->left expr->right
+        // jeśli expr->left is Variable to dodaj, jak Constant pomiń, a jak Expr
+        // to lecisz dalej rekurencyjnie
     }
 }
