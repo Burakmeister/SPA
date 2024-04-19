@@ -69,19 +69,19 @@ namespace SPA.Parsing
             }
             else
             {
-                throw new Exception("Nieprawidłowo zdefiniowana pętla while!");
+                throw new Exception($"Nieprawidłowo zdefiniowana pętla while! [linia: {lineNumber}]");
             }
         }
 
         private bool IsNameAccepted(string? name)
         {
-            if(name==null) return false;
-            if(name.Length > 0 && ((name[0]>64 && name[0] < 91) || (name[0] > 96 && name[0] < 123)))
+            if (name == null || name.Length == 0 || !((name[0] > 64 && name[0] < 91) || (name[0] > 96 && name[0] < 123)))
             {
-                return true;
+                throw new Exception($"Nieprawidłowa nazwa {name}! [linia: {lineNumber}, struktura: StructureName]");
             }
-            return false;
+            return true;
         }
+
 
         public Assign CreateAssign(ArrayList stringsList)
         {
@@ -245,7 +245,7 @@ namespace SPA.Parsing
             }
             else
             {
-                throw new Exception("Nieprawidłowo zdefiniowana procedura!");
+                throw new Exception($"Nieprawidłowo zdefiniowana procedura! [linia: {lineNumber}]");
             }
         }
 
@@ -253,36 +253,48 @@ namespace SPA.Parsing
         {
             int i = 0;
             int bracketCounter = 0;
-            while (stringsList[i] as string != "{")
+            while (i < stringsList.Count && stringsList[i] as string != "{")
             {
                 i++;
             }
-            i++;
-            for(; i<stringsList.Count; i++)
+            if (i >= stringsList.Count) // No opening bracket found at all
             {
-                if(stringsList[i] as string == "{") bracketCounter++;
-                if(stringsList[i] as string == "}" && bracketCounter == 0)
+                throw new Exception($"Brakuje klamry otwierającej! [linia: {lineNumber}]");
+            }
+
+            i++;
+            for (; i < stringsList.Count; i++)
+            {
+                if (stringsList[i] as string == "{")
                 {
-                    return i;
+                    bracketCounter++;
                 }
-                else if(stringsList[i] as string == "}")
+                if (stringsList[i] as string == "}")
                 {
+                    if (bracketCounter == 0)
+                    {
+                        return i;
+                    }
                     bracketCounter--;
                 }
             }
-            throw new Exception("Brakuje klamry zamykającej!");
+            throw new Exception($"Brakuje klamry zamykającej! [linia: {lineNumber}]");
         }
+
 
         private int FindSemicolon(ArrayList stringsList)
         {
-            for (int i=0; i < stringsList.Count; i++)
+            for (int i = 0; i < stringsList.Count; i++)
             {
-                if (stringsList[i] as string == ";" || (stringsList[i] as string)!.EndsWith(';'))
+                if ((stringsList[i] as string).EndsWith(";"))
                 {
                     return i;
                 }
             }
-            throw new Exception("Brakuje średnika!");
+            throw new Exception($"Brak średnika! [linia: {lineNumber}]");
         }
+
+
+
     }
 }
