@@ -12,7 +12,7 @@ namespace SPA.QueryProcessor
         // Klasa sprawdza poprawność zapytania i tworzy jego drzewo
 
         // Table-driven approach dla tablicy relacji
-        private Dictionary<string, (int, string[], string[],
+        private Dictionary<string, (int, TokenType[], TokenType[],
             Func<StmtRef, StmtRef, Relation> createStmtStmtInstance,
             Func<StmtRef, EntRef, Relation> createStmtEntInstance)> relTable;
 
@@ -20,40 +20,41 @@ namespace SPA.QueryProcessor
         private Query _query;
 
         private int position = 0;   // pozycja analizatora parsera
+        private string[] parts;
 
         public QueryPreprocessor(string query, Query _query)
         {
-            relTable = new Dictionary<string, (int, string[], string[],
+            relTable = new Dictionary<string, (int, TokenType[], TokenType[],
                 Func<StmtRef, StmtRef, Relation> createStmtStmtInstance,
                 Func<StmtRef, EntRef, Relation> createStmtEntInstance)>
             {
                 { "Follows",
-                    (2, new[] { "IDENT", "_", "INTEGER" }, new[] { "IDENT", "_", "INTEGER" },
+                    (2, new[] { TokenType.IDENT, TokenType.INTEGER }, new[] { TokenType.IDENT, TokenType.INTEGER },
                     (arg1, arg2) => new Follows { StmtRef = arg1, StmtRef2 = arg2 },
                     null)
                 },
                 { "Follows*",
-                    (2, new[] { "IDENT", "_", "INTEGER" }, new[] { "IDENT", "_", "INTEGER" },
+                    (2, new[] { TokenType.IDENT, TokenType.INTEGER }, new[] { TokenType.IDENT, TokenType.INTEGER },
                     (arg1, arg2) => new FollowsT { StmtRef = arg1, StmtRef2 = arg2 },
                     null)
                 },
                 { "Parent", 
-                    (2, new[] { "IDENT", "_", "INTEGER" }, new[] { "IDENT", "_", "INTEGER" },
+                    (2, new[] { TokenType.IDENT, TokenType.INTEGER }, new[] { TokenType.IDENT, TokenType.INTEGER },
                     (arg1, arg2) => new Parent { StmtRef = arg1, StmtRef2 = arg2 },
                     null)
                 },
                 { "Parent*",
-                    (2, new[] { "IDENT", "_", "INTEGER" }, new[] { "IDENT", "_", "INTEGER" },
+                    (2, new[] { TokenType.IDENT, TokenType.INTEGER }, new[] { TokenType.IDENT, TokenType.INTEGER },
                     (arg1, arg2) => new ParentT { StmtRef = arg1, StmtRef2 = arg2 },
                     null)
                 },
                 { "Modifies",
-                    (2, new[] { "IDENT", "_", "INTEGER" }, new[] { "IDENT", "_", "\"IDENT\"" },
+                    (2, new[] { TokenType.IDENT, TokenType.INTEGER }, new[] { TokenType.IDENT, TokenType.IDENT },
                     null,
                     (arg1, arg2) => new ModifiesS { StmtRef = arg1, EntRef = arg2 })
                 },
                 { "Uses",
-                    (2, new[] { "IDENT", "_", "INTEGER" }, new[] { "IDENT", "_", "\"IDENT\"" },
+                    (2, new[] { TokenType.IDENT, TokenType.INTEGER }, new[] { TokenType.IDENT, TokenType.IDENT },
                     null,
                     (arg1, arg2) => new UsesS { StmtRef = arg1, EntRef = arg2 })
                 }
@@ -67,25 +68,29 @@ namespace SPA.QueryProcessor
 
         }
 
-        // Parsing
         private void ValidateQuery()
         {
+            // Zapytanie od razu dzielimy na tokeny, aby się pozbyć problemu z białymi znakami
+            string pattern = @"(\s+|;|\.|\(|\)|,)"; // separatory
+            parts = Regex.Split(query, pattern);
+            parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
 
             // Tutaj powinno być peek() na deklaracje bo są opcjonalne!!
             // Wsm bez różnicy, to strata pamięci wielkości małej listy
             _query.Declarations = ValidateDeclarations();
             Match("Select");
             _query.Synonym = Match(TokenType.IDENT).Value;
+
             // Sprawdź dwa następne tokeny
             if (Peek(1) == "such" && Peek(2) == "that") 
             {
-                Advance(3);
+                Advance(2);
                 _query.SuchThatClause = ValidateSuchThatClause();
             }
 
             if (Peek(1) == "with")
             {
-                Advance(2);
+                Advance();
                 _query.WithClause = ValidateWithClause();
             }
 
@@ -157,19 +162,12 @@ namespace SPA.QueryProcessor
 
                 // Sprawdź, czy pierwszy argument zgadza się z definicją
                 Token[] argsTokens = new Token[numArgs];
-                for (int i = 0; i < numArgs; i++)
-                {
-                    argsTokens[i] = Match(argTypes[i]);
-                }
+                argsTokens[0] = MatchArgument(argTypes);
 
                 Match(TokenType.SYMBOL, ",");
 
                 // Sprawdź, czy drugi argument zgadza się z definicją
-                Token[] valsTokens = new Token[numArgs];
-                for (int i = 0; i < numArgs; i++)
-                {
-                    valsTokens[i] = Match(argTypes2[i]);
-                }
+                argsTokens[1] = MatchArgument(argTypes2);
 
                 Match(TokenType.SYMBOL, ")");
 
@@ -279,18 +277,32 @@ namespace SPA.QueryProcessor
             }
         }
 
+        private Token MatchArgument(TokenType[] type)
+        {
+            // Służy do sprawdzania zgodności typu podanego argumentu w relacji
+            Token token = PeekToken();
+            if (token.Value == "_")
+            {
+                Advance();
+                return token;
+            }
+            else if (!type.Contains(token.Type))
+            {
+                throw new Exception($"Invalid argument type: {token.Type}");
+            }
+            else
+            {
+                Advance();
+                return token;
+            }
+        }
+
         private Token PeekToken()
         {
             // Służy do sprawdzenia typu tokena w zapytaniu
-            //string[] parts = query.Substring(position).Trim().Split(' ');
-            string input = position < query.Length ? query.Substring(position).Trim() : query[position - 1].ToString();
-            string pattern = @"(\s+|;|\.|\(|\)|,)"; // separatory
-            string[] parts = Regex.Split(input, pattern);
-            parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
-
             // Jeśli tablica jest pusta, osiągnięto
             // koniec zapytania:
-            if (input.Length == 0)
+            if (parts.Length == 0)
             {
                 return new Token(TokenType.EOF, "");
             }
@@ -318,39 +330,22 @@ namespace SPA.QueryProcessor
         {
             // Służy do przesuwania pozycji analizatora
             // o określoną liczbę tokenów do przodu
-            // Główne wyzwanie - na tokeny dzielony jest faktyczny ciąg z białymi znakami,
-            // a więc position musi je odpowiednio uwzględniać aby obliczyć prawidłowo
-            string input = position < query.Length ? query.Substring(position).Trim() : query[position - 1].ToString();
-            string pattern = @"(\s+|;|\.|\(|\)|,)"; // separatory
-            string[] parts = Regex.Split(input, pattern);
-
-            if (numTokens > 1) // jeśli bierzemy któryś n-ty token, należy uzwględnić fakt wystąpienia kilku białych znaków
+            if (numTokens > 1)
             {
-                parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
-                position += parts[numTokens - 1].Length + (numTokens - 1);    // aby w obliczeniach uwzględnić wszystkie whitespace
-            }
-            else if (parts[1] == "" || parts[1] == " " || parts[0] == "" || parts[0] == " ")  // jeśli po tokenie występuje biały znak
-            {
-                parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
-                position += parts[numTokens - 1].Length + 1;    // aby przesunąć pozycję za spację
+                parts = parts.Skip(numTokens).ToArray();    // usuń wykorzystane już tokeny z tablicy
+                position += numTokens;
             }
             else
             {
-                parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
-                position += parts[numTokens - 1].Length;
+                parts = parts.Skip(1).ToArray();    // usuń wykorzystany już token z tablicy
+                position++;
             }
-            
         }
 
         private string Peek(int numTokens = 1)
         {
             // Służy do sprawdzenia n-tego słowa w zapytaniu,
             // bez konieczności przesuwania pozycji analizatora
-            // Dzielenie tokenów:
-            string input = position < query.Length ? query.Substring(position).Trim() : query[position - 1].ToString();
-            string pattern = @"(\s+|;|\.|\(|\)|,)"; // separatory
-            string[] parts = Regex.Split(input, pattern);
-            parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
             if (parts.Length > 0 && numTokens <= parts.Length)   // jeśli możliwe jest sprawdzenie n-tego tokena
             {
                 return parts[numTokens - 1];
@@ -360,12 +355,6 @@ namespace SPA.QueryProcessor
                 return "";
             }
         }
-
-        private void BuildQueryTree()
-        {
-
-        }
-
 
     }
 }
