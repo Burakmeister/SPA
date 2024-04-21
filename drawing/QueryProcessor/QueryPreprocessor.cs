@@ -70,13 +70,12 @@ namespace SPA.QueryProcessor
         // Parsing
         private void ValidateQuery()
         {
+
             // Tutaj powinno być peek() na deklaracje bo są opcjonalne!!
             // Wsm bez różnicy, to strata pamięci wielkości małej listy
             _query.Declarations = ValidateDeclarations();
             Match("Select");
-            //Advance();
             _query.Synonym = Match(TokenType.IDENT).Value;
-            //Advance();
             // Sprawdź dwa następne tokeny
             if (Peek(1) == "such" && Peek(2) == "that") 
             {
@@ -127,7 +126,6 @@ namespace SPA.QueryProcessor
             synonyms.Add(Match(TokenType.IDENT).Value);
 
             // W przypadku kolejnych synonyms:
-            Advance();
             while (Peek() == ",")
             {
                 Advance();
@@ -320,16 +318,28 @@ namespace SPA.QueryProcessor
         {
             // Służy do przesuwania pozycji analizatora
             // o określoną liczbę tokenów do przodu
+            // Główne wyzwanie - na tokeny dzielony jest faktyczny ciąg z białymi znakami,
+            // a więc position musi je odpowiednio uwzględniać aby obliczyć prawidłowo
             string input = position < query.Length ? query.Substring(position).Trim() : query[position - 1].ToString();
             string pattern = @"(\s+|;|\.|\(|\)|,)"; // separatory
             string[] parts = Regex.Split(input, pattern);
-            parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
-            position += parts[numTokens - 1].Length + 1;
 
-            //if (position < query.Length && parts.Length < numTokens)
-            //{
-            //    position++;  // Przesunięcie za separator, jeśli to konieczne
-            //}
+            if (numTokens > 1) // jeśli bierzemy któryś n-ty token, należy uzwględnić fakt wystąpienia kilku białych znaków
+            {
+                parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
+                position += parts[numTokens - 1].Length + (numTokens - 1);    // aby w obliczeniach uwzględnić wszystkie whitespace
+            }
+            else if (parts[1] == "" || parts[1] == " " || parts[0] == "" || parts[0] == " ")  // jeśli po tokenie występuje biały znak
+            {
+                parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
+                position += parts[numTokens - 1].Length + 1;    // aby przesunąć pozycję za spację
+            }
+            else
+            {
+                parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
+                position += parts[numTokens - 1].Length;
+            }
+            
         }
 
         private string Peek(int numTokens = 1)
