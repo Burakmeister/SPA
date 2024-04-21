@@ -68,7 +68,7 @@ namespace SPA.QueryProcessor
         }
 
         // Parsing
-        private void ValidateQuery()
+        public void ValidateQuery()
         {
             _query.Declarations = ValidateDeclarations();
             Match("Select");
@@ -90,7 +90,7 @@ namespace SPA.QueryProcessor
             Console.WriteLine("Query is valid");
         }
 
-        private List<Declaration> ValidateDeclarations()
+        public List<Declaration> ValidateDeclarations()
         {
             List<Declaration> declarations = new List<Declaration>();
 
@@ -118,7 +118,7 @@ namespace SPA.QueryProcessor
             return declarations;
         }
 
-        private List<string> ValidateSynonyms()
+        public List<string> ValidateSynonyms()
         {
             List<string> synonyms = new List<string>();
             synonyms.Add(Match(TokenType.IDENT).Value);
@@ -133,14 +133,14 @@ namespace SPA.QueryProcessor
             return synonyms;
         }
 
-        private SuchThat ValidateSuchThatClause()
+        public SuchThat ValidateSuchThatClause()
         {
             SuchThat clause = new SuchThat();
             clause.Relation = ValidateRelation();
             return clause;
         }
 
-        private Relation ValidateRelation()
+        public Relation ValidateRelation()
         {
             Token relToken = PeekToken();
 
@@ -195,7 +195,7 @@ namespace SPA.QueryProcessor
             }
         }
 
-        private With ValidateWithClause()
+        public With ValidateWithClause()
         {
             With clause = new With();
             clause.Synonym = Match(TokenType.IDENT).Value;
@@ -206,7 +206,7 @@ namespace SPA.QueryProcessor
             return clause;
         }
 
-        private Token MatchDesignEntity()
+        public Token MatchDesignEntity()
         {
             string[] validDesignEntities = { "stmt", "assign", "while", "variable", "constant", "prog_line" };
             Token token = Match(TokenType.IDENT);
@@ -219,7 +219,7 @@ namespace SPA.QueryProcessor
             return token;
         }
 
-        private Token Match(params object[] expectedValues)
+        public Token Match(params object[] expectedValues)
         {
             Token token = PeekToken();
 
@@ -249,7 +249,7 @@ namespace SPA.QueryProcessor
             return token;
         }
 
-        private string MatchAttrName()
+        public string MatchAttrName()
         {
             string[] validAttrNames = { "procName", "varName", "value", "stmt#" };
             Token token = Match(TokenType.IDENT);
@@ -262,7 +262,7 @@ namespace SPA.QueryProcessor
             return token.Value;
         }
 
-        private string MatchValue()
+        public string MatchValue()
         {
             // Służy do sprawdzenia ref w klauzuli with
             Token token = PeekToken();
@@ -277,7 +277,7 @@ namespace SPA.QueryProcessor
             }
         }
 
-        private Token PeekToken()
+        public Token PeekToken()
         {
             // Służy do sprawdzenia typu tokena w zapytaniu
             string[] parts = query.Substring(position).Trim().Split(' ');
@@ -308,7 +308,7 @@ namespace SPA.QueryProcessor
             return new Token(tokenType, parts[0]);
         }
 
-        private void Advance(int numTokens = 1)
+        public void Advance(int numTokens = 1)
         {
             // Służy do przesuwania pozycji analizatora
             // o określoną liczbę tokenów do przodu
@@ -316,7 +316,7 @@ namespace SPA.QueryProcessor
             position += parts[numTokens].Length + 1;
         }
 
-        private string Peek(int numTokens = 1)
+        public string Peek(int numTokens = 1)
         {
             // Służy do sprawdzenia n-tego słowa w zapytaniu,
             // bez konieczności przesuwania pozycji analizatora
@@ -337,6 +337,9 @@ namespace SPA.QueryProcessor
 
         }
 
-
+        internal void SetupToken(TokenType iDENT, string v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
