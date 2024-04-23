@@ -16,7 +16,7 @@ namespace SPA.ViewModels
 {
     public class Drawer : IDrawer, INotifyPropertyChanged
     {
-        private QueryProcessor _processor;
+        private QueryProcessorExec _processor;
         public ICommand executeQueryCmnd => new Command(executeQuery!);
         public ICommand DrawNextProcedureCommand => throw new NotImplementedException();
         public ICommand DrawPrevProcedureCommand => throw new NotImplementedException();
@@ -67,7 +67,7 @@ namespace SPA.ViewModels
         public void executeQuery(object param)
         {
             string query = _codeQuery;
-            _processor = new QueryProcessor(query);
+            _processor = new QueryProcessorExec(query);
 
             MessageBox.Show("Query executed");
         }
