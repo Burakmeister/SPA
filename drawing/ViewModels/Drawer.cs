@@ -1,7 +1,9 @@
-﻿using SPA.DesignEntities;
+using SPA.QueryProcessor;
+using System;
+using System.ComponentModel;
+using SPA.DesignEntities;
 using SPA.Parsing;
 using SPA.PKB;
-using System;
 using System.Collections;
 using System.Diagnostics;
 using System.Windows;
@@ -12,8 +14,12 @@ using System.Windows.Shapes;
 
 namespace SPA.ViewModels
 {
-    public class Drawer : IDrawer
+    public class Drawer : IDrawer, INotifyPropertyChanged
     {
+        private QueryProcessor _processor;
+        public ICommand executeQueryCmnd => new Command(executeQuery!);
+        public ICommand DrawNextProcedureCommand => throw new NotImplementedException();
+        public ICommand DrawPrevProcedureCommand => throw new NotImplementedException();
         public string Code { get; set; } = "";
         private ArrayList procedures = new ArrayList();
         private int currentIndex = 0;
@@ -38,10 +44,34 @@ namespace SPA.ViewModels
                 Debug.WriteLine(ex.Message);
             }
         });
+        private string _codeQuery;
+        public string codeQuery
+        {
+            get { return _codeQuery; }
+            set
+            {
+                if (_codeQuery != value)
+                {
+                    _codeQuery = value;
+                    OnPropertyChanged(nameof(codeQuery));
+                }
+            }   
+        }
 
-        public ICommand DrawNextProcedureCommand => throw new NotImplementedException();
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
-        public ICommand DrawPrevProcedureCommand => throw new NotImplementedException();
+        public void executeQuery(object param)
+        {
+            string query = _codeQuery;
+            _processor = new QueryProcessor(query);
+
+            MessageBox.Show("Query executed");
+        }
+
 
         private void CompleteProceduresList()
         {

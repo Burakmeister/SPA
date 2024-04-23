@@ -1,4 +1,6 @@
-﻿using SPA.ViewModels;
+
+using SPA.ViewModels;
+
 using System.Windows;
 
 namespace SPA

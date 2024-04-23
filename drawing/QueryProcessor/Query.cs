@@ -13,16 +13,5 @@ namespace SPA.QueryProcessor
         public SuchThat SuchThatClause { get; set; }
         public With WithClause { get; set; }
 
-
-        public Query()
-        {
-            
-            
-        }
-
-        internal object Substring(object position)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
