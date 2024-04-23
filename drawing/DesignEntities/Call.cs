@@ -6,10 +6,7 @@ using System.Threading.Tasks;
 
 namespace SPA.DesignEntities
 {
-    public abstract class Expr : Statement
+    public class Call
     {
-        protected Expr(int lineNumber) : base(lineNumber)
-        {
-        }
     }
 }

@@ -22,8 +22,8 @@ namespace SPA.QueryProcessor
             _query = new Query();
             _preprocessor = new QueryPreprocessor(query, _query);
             _evaluator = new QueryEvaluator();
+        
 
-            
         }
 
     }

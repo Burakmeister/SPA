@@ -5,10 +5,13 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace drawing.ViewModels
+namespace SPA.ViewModels
 {
     public interface IDrawer
     {
         ICommand executeQueryCmnd { get; }
+        ICommand ParseCommand { get; }
+        ICommand DrawNextProcedureCommand { get; }
+        ICommand DrawPrevProcedureCommand { get; }
     }
 }

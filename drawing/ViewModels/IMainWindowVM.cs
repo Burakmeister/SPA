@@ -1,4 +1,4 @@
-﻿namespace drawing.ViewModels
+﻿namespace SPA.ViewModels
 {
     public interface IMainWindowVM
     {

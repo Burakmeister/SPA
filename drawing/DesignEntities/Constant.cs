@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 namespace SPA.DesignEntities
 {
-    public abstract class Expr : Statement
+    public class Constant : Factor
     {
-        protected Expr(int lineNumber) : base(lineNumber)
+        public int Value { get; private set; }
+        public Constant(int value, int lineNumber) : base(lineNumber)
         {
+            Value = value;
         }
     }
 }
