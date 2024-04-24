@@ -333,6 +333,5 @@ namespace SPA.PKB
         {
             return varTable.Length;
         }
-
     }
 }

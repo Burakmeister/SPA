@@ -67,7 +67,7 @@ namespace SPA.ViewModels
         public void executeQuery(object param)
         {
             string query = _codeQuery;
-            _processor = new QueryProcessorExec(query);
+            _processor = new QueryProcessorExec(query, pkb);
 
             MessageBox.Show("Query executed");
         }
