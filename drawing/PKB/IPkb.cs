@@ -56,5 +56,7 @@ namespace SPA.PKB
         String GetProcedureName(int index);
 
         int GetProcedureIndex(String ProcedureName);
+
+        void ClearPkb();
     }
 }

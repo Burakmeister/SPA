@@ -36,11 +36,22 @@ namespace SPA.PKB
             modifies = new int[statementCount];
             InitializeArrayWithValue(modifies, -1);
             follows = new int[statementCount];
+            InitializeArrayWithValue(follows, -1);
             parents = new List<int>[statementCount];
+            InitializeLists(parents);
             uses = new List<int>[statementCount];
+            InitializeLists(uses);
 
             firstEmptyProcTableIndex = 0;
             firstEmptyVarTableIndex = 0;
+        }
+
+        private void InitializeArrayWithValue(string[] array, string value)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = value;
+            }
         }
 
         private void InitializeArrayWithValue(int[] array, int value)
@@ -48,6 +59,14 @@ namespace SPA.PKB
             for (int i = 0; i < array.Length; i++)
             {
                 array[i] = value;
+            }
+        }
+
+        private void InitializeLists(List<int>[] lists)
+        {
+            for (int i = 0; i < lists.Length; i++)
+            {
+                lists[i] = new List<int>();
             }
         }
 
@@ -290,6 +309,19 @@ namespace SPA.PKB
         public int GetVarTableSize()
         {
             return variables.Count;
+        }
+
+        public void ClearPkb()
+        {
+            InitializeArrayWithValue(varTable, "");
+            InitializeArrayWithValue(procTable, "");
+            InitializeArrayWithValue(modifies, -1);            
+            InitializeArrayWithValue(follows, -1);
+            InitializeLists(parents);
+            InitializeLists(uses);
+
+            firstEmptyProcTableIndex = 0;
+            firstEmptyVarTableIndex = 0;
         }
     }
 }
