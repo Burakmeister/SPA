@@ -1,4 +1,5 @@
 ﻿using SPA.DesignEntities;
+using System;
 using System.Collections;
 
 namespace SPA.PKB
@@ -16,14 +17,150 @@ namespace SPA.PKB
        
         public void FillPKB()
         {
-            InsertVariablesIntoVarTable();
+            InsertVariables();
+            InsertWhiles();
+            InsertAssigns();
+            InsertConstants();
             InsertModifiesRel();
             InsertFollowsRel();
             InsertParentRel();
             InsertUsesRel();
+            InsertProcedures();
         }
 
-        private void InsertVariablesIntoVarTable()
+        private void InsertProcedures() {
+            for (int i = 0; i < procedures.Count; i++)
+            {
+                Procedure proc = (Procedure)procedures[i];
+               pkb.InsertProcedure(proc.ProcName);
+            }
+        }
+
+        private void InsertWhiles()
+        {
+            for (int i = 0; i < procedures.Count; i++)
+            {
+                FindProcedureWhiles((Procedure)procedures[i]!);
+            }
+        }
+
+        private void FindProcedureWhiles(Procedure procedure)
+        {
+            if (procedure.StatementList!.FirstStatement != null)
+            {
+                FindStatementWhiles(procedure.StatementList.FirstStatement);
+            }
+        }
+
+        private void FindStatementWhiles(Statement statement)
+        {
+            if (statement != null)
+            {
+                if (statement is Assign)
+                {
+                    FindStatementWhiles(statement.NextStatement);
+                }
+                else if (statement is While)
+                {
+                    While stmtWhile = statement as While;
+                    pkb.InsertWhile(stmtWhile.LineNumber);
+                    FindStatementWhiles(stmtWhile.NextStatement);
+                    FindStatementWhiles(stmtWhile.StatementList.FirstStatement);
+                }
+            } 
+        }
+
+        private void InsertAssigns()
+        {
+            for (int i = 0; i < procedures.Count; i++)
+            {
+                FindProcedureAssigns((Procedure)procedures[i]!);
+            }
+        }
+
+        private void FindProcedureAssigns(Procedure procedure)
+        {
+            if (procedure.StatementList!.FirstStatement != null)
+            {
+                FindStatementAssigns(procedure.StatementList.FirstStatement);
+            }
+        }
+
+        private void FindStatementAssigns(Statement statement)
+        {
+            if (statement != null)
+            {
+                if (statement is Assign)
+                {
+                    pkb.InsertAssign(statement.LineNumber);
+                    FindStatementAssigns(statement.NextStatement);
+                }
+                else if (statement is While)
+                {
+                    While stmtWhile = statement as While;
+                    FindStatementAssigns(stmtWhile.NextStatement);
+                    FindStatementAssigns(stmtWhile.StatementList.FirstStatement);
+                }
+            }
+           
+        }
+
+        private void InsertConstants()
+        {
+            for (int i = 0; i < procedures.Count; i++)
+            {
+                FindProcedureConstants((Procedure)procedures[i]!);
+            }
+        }
+
+        private void FindProcedureConstants(Procedure procedure)
+        {
+            if (procedure.StatementList!.FirstStatement != null)
+            {
+                FindStatementConstants(procedure.StatementList.FirstStatement);
+            }
+        }
+
+        private void FindStatementConstants(Statement statement)
+        {
+            if (statement != null)
+            {
+                if (statement is Assign)
+                {
+                    Assign assign = (statement as Assign)!;
+                    FindExprConstants(assign.Expr);
+                    FindStatementConstants(statement.NextStatement);
+                }
+                else if (statement is While)
+                {
+                    While stmtWhile = statement as While;
+                    FindStatementConstants(stmtWhile.NextStatement);
+                    FindStatementConstants(stmtWhile.StatementList.FirstStatement);
+                }
+            }
+           
+        }
+
+        private void FindExprConstants(Expr expr)
+        {
+            if (expr is Factor)
+            {
+                Factor factor = (Factor)expr;
+                if (factor is Constant)
+                {
+                    Constant constant = (Constant)factor;
+                    pkb.InsertConstant(constant.Value);
+                }
+            }
+            else if (expr is ExprPlus)
+            {
+                ExprPlus exprPlus = (ExprPlus)expr;
+                FindExprConstants(exprPlus.LeftExpr);
+                FindExprConstants(exprPlus.RightExpr);
+            }
+        }
+
+        private void InsertVariables()
         {
             for (int i = 0; i < procedures.Count; i++)
             {
@@ -197,15 +334,6 @@ namespace SPA.PKB
             if (statement != null && statement is Assign)
             {
                 Assign assign = (statement as Assign)!;
-                //if (assign!.Expr is Factor)
-                //{
-                //    Factor factor = (Factor)assign.Expr;
-                //    if (factor is Variable)
-                //    {
-                //        Variable variable = (Variable)factor;
-                //        pkb!.SetUses(statement, variable);
-                //    }
-                //}
                 CheckExpr(assign, assign.Expr);
                 FindStatementUses(statement!.NextStatement!);
 

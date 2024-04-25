@@ -1,5 +1,6 @@
 ﻿using SPA.DesignEntities;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -47,15 +48,32 @@ namespace SPA.PKB
 
         int GetVariableIndex(String VariableName);
 
-        int GetVarTableSize();
+        int GetVariablesSize();
+
+        ArrayList GetVariables();
 
         int InsertProcedure(String procedureName);
 
-        int GetProcTableSize();
+        int GetProceduresSize();
 
         String GetProcedureName(int index);
 
         int GetProcedureIndex(String ProcedureName);
+
+        ArrayList GetProcedures();
+
+        int InsertAssign(int statementNumber);
+
+        ArrayList GetAssigns();
+
+        int InsertWhile(int statementNumber);
+
+        ArrayList GetWhiles();
+
+        int InsertConstant(int constant);
+
+        ArrayList GetConstants();
+
 
         void ClearPkb();
     }

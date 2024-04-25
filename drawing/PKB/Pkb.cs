@@ -13,18 +13,26 @@ namespace SPA.PKB
         private ArrayList variables;
         private ArrayList procedures;
         private ArrayList whiles;
+        private ArrayList assigns;
+        private ArrayList constants;
 
         private int[] follows;
         private List<int>[] parents;
         private List<int>[] uses;
         private int[] modifies;
 
+        public int programLength;
+
         // konstruktor zapobiegający kolejnym instancjom
         private Pkb(int statementCount)
         {
+            programLength = statementCount; 
+
             variables = new ArrayList();
             procedures = new ArrayList();
             whiles = new ArrayList();
+            assigns = new ArrayList();
+            constants = new ArrayList();
 
             modifies = new int[statementCount];
             InitializeArrayWithValue(modifies, -1);
@@ -257,17 +265,20 @@ namespace SPA.PKB
             }
         }
 
-        public int GetProcTableSize()
+        public int GetProceduresSize()
         {
             return procedures.Count;
+        }
+
+        public ArrayList GetProcedures()
+        {
+            return procedures;
         }
 
         public int InsertVariable(string variableName)
         {
             if (!variables.Contains(variableName))
-            {
                 variables.Add(variableName);
-            }
             return variables.IndexOf(variableName);
         }
 
@@ -297,9 +308,50 @@ namespace SPA.PKB
             }
         }
 
-        public int GetVarTableSize()
+        public int GetVariablesSize()
         {
             return variables.Count;
+        }
+
+        public ArrayList GetVariables()
+        {
+            return variables;
+        }
+
+        public int InsertAssign(int statementNumber)
+        {
+           if(!assigns.Contains(statementNumber))
+                assigns.Add(statementNumber);
+           return assigns.IndexOf(statementNumber);
+        }
+
+        public ArrayList GetAssigns()
+        {
+            return assigns;
+        }
+
+        public int InsertWhile(int statementNumber)
+        {
+            if (!whiles.Contains(statementNumber))
+                whiles.Add(statementNumber);
+            return whiles.IndexOf(statementNumber);
+        }
+
+        public ArrayList GetWhiles()
+        {
+            return whiles;
+        }
+
+        public int InsertConstant(int constant)
+        {
+            if(!constants.Contains(constant))
+                constants.Add(constant);
+            return constants.IndexOf(constant);
+        }
+
+        public ArrayList GetConstants()
+        {
+            return constants;
         }
 
         public void ClearPkb()
@@ -309,5 +361,6 @@ namespace SPA.PKB
             InitializeLists(parents);
             InitializeLists(uses);
         }
+
     }
 }
