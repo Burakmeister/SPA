@@ -11,35 +11,35 @@ namespace SPA.PKB
     {
         void SetFollows(Statement firstStatement, Statement nextStatement);
 
-        List<int> GetFollowed(Statement firstStatement);
+        List<int> GetFollowed(int statementNumber);
 
-        List<int> GetFollows(Statement nextStatement);
+        List<int> GetFollows(int statementNumber);
 
-        bool IsFollowed(Statement firstStatement, Statement nextStatement);
+        bool IsFollowed(int statementNumber, int nextStatement);
 
         void SetUses(Statement statement, Variable variable);
 
-        List<Variable> GetUsed(Statement statement);
+        List<Variable> GetUsed(int statement);
 
-        List<int> GetUses(Variable variable);
+        List<int> GetUses(string variable);
 
-        bool IsUsed(Variable variable,Statement statement);
+        bool IsUsed(string variable,int statement);
 
         void SetModifies(Statement statement, Variable variable);
 
-        List<Variable> GetModified(Statement statement);
+        List<Variable> GetModified(int statementNumber);
 
-        List<int> GetModifies(Variable variable);
+        List<int> GetModifies(string variable);
 
-        bool IsModified(Variable variable, Statement statement);
+        bool IsModified(string variable, int statement);
 
         void SetParent(Statement parentStatement, Statement childStatement);
 
-        List<int> GetChildren(Statement parentStatement);
+        List<int> GetChildren(int parentStatement);
 
-        int GetParent(Statement childStatement);
+        int GetParent(int childStatement);
 
-        bool IsParent(Statement parentStatement, Statement childStatement);
+        bool IsParent(int parentStatement, int childStatement);
 
         int InsertVariable(String variableName);
 

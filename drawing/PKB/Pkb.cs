@@ -1,11 +1,7 @@
 ﻿using SPA.DesignEntities;
 using SPA.Exceptions;
-using System;
 using System.Collections.Generic;
 using System.Collections;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SPA.PKB
 {
@@ -17,9 +13,6 @@ namespace SPA.PKB
         private ArrayList variables;
         private ArrayList procedures;
         private ArrayList whiles;
-
-        int firstEmptyProcTableIndex;
-        int firstEmptyVarTableIndex;
 
         private int[] follows;
         private List<int>[] parents;
@@ -42,8 +35,6 @@ namespace SPA.PKB
             uses = new List<int>[statementCount];
             InitializeLists(uses);
 
-            firstEmptyProcTableIndex = 0;
-            firstEmptyVarTableIndex = 0;
         }
 
         private void InitializeArrayWithValue(string[] array, string value)
@@ -84,18 +75,18 @@ namespace SPA.PKB
             follows[firstStatement.LineNumber] = nextStatement.LineNumber;
         }
 
-        public List<int> GetFollowed(Statement firstStatement)
+        public List<int> GetFollowed(int statementNumber)
         {
-            return new List<int>() { follows[firstStatement.LineNumber] };
+            return new List<int>() { follows[statementNumber] };
         }
 
-        public List<int> GetFollows(Statement nextStatement)
+        public List<int> GetFollows(int statementNumber)
         {
             List<int> result = new List<int>();
 
             for (int i = 0; i < follows.Length; i++)
             {
-                if (follows[i] == nextStatement.LineNumber)
+                if (follows[i] == statementNumber)
                 {
                     result.Add(i);
                 }
@@ -103,9 +94,9 @@ namespace SPA.PKB
             return result;
         }
 
-        public bool IsFollowed(Statement firstStatement, Statement nextStatement)
+        public bool IsFollowed(int firstStatement, int nextStatement)
         {
-            if (follows[firstStatement.LineNumber]==nextStatement.LineNumber)
+            if (follows[firstStatement]==nextStatement)
             {
                 return true;
             }
@@ -117,9 +108,9 @@ namespace SPA.PKB
             modifies[statement.LineNumber] = GetVariableIndex(variable.VarName);
         }
 
-        public List<Variable> GetModified(Statement statement)
+        public List<Variable> GetModified(int statementNumber)
         {
-            int variableIndex = modifies[statement.LineNumber];
+            int variableIndex = modifies[statementNumber];
             if (variableIndex >= 0)
             {
                 string variableName = (string)variables[variableIndex];
@@ -133,10 +124,10 @@ namespace SPA.PKB
 
         }
 
-        public List<int> GetModifies(Variable variable)
+        public List<int> GetModifies(string variable)
         {
             List<int> result = new List<int>();
-            int varIndex = GetVariableIndex(variable.VarName);
+            int varIndex = GetVariableIndex(variable);
             for (int i = 0; i < modifies.Length; i++)
             {
                 if (modifies[i] == varIndex)
@@ -147,9 +138,9 @@ namespace SPA.PKB
             return result;
         }
 
-        public bool IsModified(Variable variable, Statement statement)
+        public bool IsModified(string variable, int statement)
         {
-            if (modifies[statement.LineNumber] == GetVariableIndex(variable.VarName))
+            if (modifies[statement] == GetVariableIndex(variable))
             {
                 return true;
             }
@@ -161,9 +152,9 @@ namespace SPA.PKB
             uses[statement.LineNumber].Add(GetVariableIndex(variable.VarName));
         }
 
-        public List<Variable> GetUsed(Statement statement)
+        public List<Variable> GetUsed(int statement)
         {
-            List<int> usedVariables = uses[statement.LineNumber];
+            List<int> usedVariables = uses[statement];
             List<Variable> variables = new List<Variable>();
 
             foreach (int index in usedVariables)
@@ -175,10 +166,10 @@ namespace SPA.PKB
             return variables;
         }
 
-        public List<int> GetUses(Variable variable)
+        public List<int> GetUses(string variable)
         {
             List<int> statements = new List<int>();
-            int varIndex = GetVariableIndex(variable.VarName);
+            int varIndex = GetVariableIndex(variable);
             for (int i = 0; i < uses.Length; i++)
             {
                 if (uses[i].Contains(varIndex))
@@ -189,9 +180,9 @@ namespace SPA.PKB
             return statements;
         }
 
-        public bool IsUsed(Variable variable, Statement statement)
+        public bool IsUsed(string variable, int statement)
         {
-            if (uses[statement.LineNumber].Contains(GetVariableIndex(variable.VarName)))
+            if (uses[statement].Contains(GetVariableIndex(variable)))
             {
                 return true;
             }
@@ -203,16 +194,16 @@ namespace SPA.PKB
             parents[parentStatement.LineNumber].Add(childStatement.LineNumber);
         }
 
-        public List<int> GetChildren(Statement parentStatement)
+        public List<int> GetChildren(int parentStatement)
         {
-            return parents[parentStatement.LineNumber];
+            return parents[parentStatement];
         }
 
-        public int GetParent(Statement childStatement)
+        public int GetParent(int childStatement)
         {
             for (int i = 0; i < parents.Length; i++)
             {
-                if (parents[i].Contains(childStatement.LineNumber))
+                if (parents[i].Contains(childStatement))
                 {
                     return i;
                 }
@@ -221,9 +212,9 @@ namespace SPA.PKB
             return -1; //czy to jest dobrze?
         }
 
-        public bool IsParent(Statement parentStatement, Statement childStatement)
+        public bool IsParent(int parentStatement, int childStatement)
         {
-            if (parents[parentStatement.LineNumber].Contains(childStatement.LineNumber))
+            if (parents[parentStatement].Contains(childStatement))
             {
                 return true;
             }
@@ -313,15 +304,10 @@ namespace SPA.PKB
 
         public void ClearPkb()
         {
-            InitializeArrayWithValue(varTable, "");
-            InitializeArrayWithValue(procTable, "");
             InitializeArrayWithValue(modifies, -1);            
             InitializeArrayWithValue(follows, -1);
             InitializeLists(parents);
             InitializeLists(uses);
-
-            firstEmptyProcTableIndex = 0;
-            firstEmptyVarTableIndex = 0;
         }
     }
 }

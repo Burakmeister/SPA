@@ -1,10 +1,5 @@
 ﻿using SPA.DesignEntities;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SPA.PKB
 {
@@ -18,9 +13,7 @@ namespace SPA.PKB
             this.procedures = procedures;
             this.pkb = pkb;
         }
-
        
-
         public void FillPKB()
         {
             InsertVariablesIntoVarTable();
@@ -244,9 +237,5 @@ namespace SPA.PKB
                 CheckExpr(statement, exprPlus.RightExpr);
             }
         }
-
-        // zrób liste variable (w metodzie wyżej) i dodawaj expr->left expr->right
-        // jeśli expr->left is Variable to dodaj, jak Constant pomiń, a jak Expr
-        // to lecisz dalej rekurencyjnie
     }
 }
