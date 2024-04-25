@@ -2,6 +2,7 @@
 using SPA.Exceptions;
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,8 +14,9 @@ namespace SPA.PKB
         public Program? program { get; set; } = null;
 
         private static Pkb instance;
-        private string[] varTable;
-        private string[] procTable;
+        private ArrayList variables;
+        private ArrayList procedures;
+        private ArrayList whiles;
 
         int firstEmptyProcTableIndex;
         int firstEmptyVarTableIndex;
@@ -27,8 +29,9 @@ namespace SPA.PKB
         // konstruktor zapobiegający kolejnym instancjom
         private Pkb(int statementCount)
         {
-            varTable = new string[100];
-            procTable = new string[50];
+            variables = new ArrayList();
+            procedures = new ArrayList();
+            whiles = new ArrayList();
 
             modifies = new int[statementCount];
             InitializeArrayWithValue(modifies, -1);
@@ -100,7 +103,7 @@ namespace SPA.PKB
             int variableIndex = modifies[statement.LineNumber];
             if (variableIndex >= 0)
             {
-                string variableName = varTable[variableIndex];
+                string variableName = (string)variables[variableIndex];
                 Variable var = new Variable(variableName, 0);
                 return new List<Variable>() { var };
             }
@@ -146,7 +149,7 @@ namespace SPA.PKB
 
             foreach (int index in usedVariables)
             {
-                string variableName = varTable[index];
+                string variableName = (string)this.variables[index];
                 Variable var = new Variable(variableName, 0);
                 variables.Add(var);
             }
@@ -211,103 +214,58 @@ namespace SPA.PKB
 
         public int InsertProcedure(string procedureName)
         {
-            int index = 0;
-            while (true)
+            if (!procedures.Contains(procedureName))
             {
-                if (firstEmptyProcTableIndex == index)
-                {
-                    procTable[firstEmptyProcTableIndex] = procedureName;
-                    firstEmptyProcTableIndex++;
-                    break;
-                }
-                else
-                {
-                    if (procTable[index] == procedureName)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        index++;
-                    }
-                }
+                procedures.Add(procedureName);
             }
-            return index;
+            return procedures.IndexOf(procedureName);
         }
 
         public int GetProcedureIndex(string ProcedureName)
         {
-            int index = 0;
-            while (procTable[index] != ProcedureName && index < procTable.Length)
+            if (procedures.Contains(ProcedureName))
             {
-                index++;
-            }
-            if (index < procTable.Length)
-            {
-                return index;
+                return procedures.IndexOf(ProcedureName);
             }
             else
             {
-                return -1; // procedure name not in procTable
+                return -1; // procedure name not in procedures
             }
         }
 
         public string GetProcedureName(int index)
         {
-            if (index >= 0 && index < procTable.Length)
+            if (index >= 0 && index < procedures.Count)
             {
-                return procTable[index];
+                return (string)procedures[index];
             }
             else
             {
-                throw new Exception();
+                OutOfBoundsIndexException e = new OutOfBoundsIndexException();
+                e.Index = index;
+                throw e;
             }
         }
 
         public int GetProcTableSize()
         {
-            return procTable.Length;
+            return procedures.Count;
         }
 
         public int InsertVariable(string variableName)
         {
-            int index = 0;
-            while (true)
+            if (!variables.Contains(variableName))
             {
-                if (firstEmptyVarTableIndex == index)
-                {
-                    varTable[firstEmptyVarTableIndex] = variableName;
-                    firstEmptyVarTableIndex++;
-                    break;
-                }
-                else
-                {
-                    if (varTable[index] == variableName)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        index++;
-                    }
-                }
+                variables.Add(variableName);
             }
-            return index;
+            return variables.IndexOf(variableName);
         }
 
         public int GetVariableIndex(string VariableName)
         {
-            int index = 0;
-            while (varTable[index]!=VariableName && index<varTable.Length) {
-                index++;
-                if (index == varTable.Length)
-                {
-                    break;
-                }
-            }
-            if (index<varTable.Length)
+            if (variables.Contains(VariableName))
             {
-                return index;
+                return variables.IndexOf(VariableName);
             }
             else
             {
@@ -317,9 +275,9 @@ namespace SPA.PKB
 
         public string GetVariableName(int index)
         {
-            if (index>=0 && index<varTable.Length)
+            if (index>=0 && index<variables.Count)
             {
-                return varTable[index];
+                return (string)variables[index];
             }
             else
             {
@@ -331,7 +289,7 @@ namespace SPA.PKB
 
         public int GetVarTableSize()
         {
-            return varTable.Length;
+            return variables.Count;
         }
     }
 }
