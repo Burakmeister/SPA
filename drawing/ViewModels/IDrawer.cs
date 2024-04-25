@@ -9,6 +9,7 @@ namespace SPA.ViewModels
 {
     public interface IDrawer
     {
+        ICommand executeQueryCmnd { get; }
         ICommand ParseCommand { get; }
         ICommand DrawNextProcedureCommand { get; }
         ICommand DrawPrevProcedureCommand { get; }

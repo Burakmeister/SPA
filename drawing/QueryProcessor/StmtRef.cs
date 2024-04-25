@@ -8,7 +8,6 @@ namespace SPA.QueryProcessor
 {
     internal class StmtRef
     {
-        public string Synonym { get; set; }
         public string Value { get; set; }
     }
 }

@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using SPA.PKB;
 
 namespace SPA.QueryProcessor
 {
-    internal class QueryProcessor
+    public class QueryProcessorExec
     {
         private readonly QueryPreprocessor _preprocessor;
         private readonly QueryEvaluator _evaluator;
@@ -15,15 +11,13 @@ namespace SPA.QueryProcessor
         // String do testu parsowania w preprocessorze
         private readonly string query;
 
-        public QueryProcessor()
+        public QueryProcessorExec(string query, IPkb pkb)
         {
-            query = "ulala";
+            this.query = query;
 
             _query = new Query();
             _preprocessor = new QueryPreprocessor(query, _query);
-            _evaluator = new QueryEvaluator();
-
-            
+            _evaluator = new QueryEvaluator(_query, pkb);
         }
 
     }

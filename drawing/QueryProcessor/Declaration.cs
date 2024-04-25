@@ -10,6 +10,5 @@ namespace SPA.QueryProcessor
     {
         public string DesignEntity { get; set; }
         public List<string> Synonyms { get; set; }
-
     }
 }

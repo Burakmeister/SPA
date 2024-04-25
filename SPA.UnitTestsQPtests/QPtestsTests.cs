@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SPA.QueryProcessor
+namespace SPA.UnitTestsQPtests
 {
-    internal class EntRef
+    internal class QPtestsTests
     {
-        public string Value { get; set; }
     }
 }

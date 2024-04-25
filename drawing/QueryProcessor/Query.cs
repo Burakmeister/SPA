@@ -10,14 +10,7 @@ namespace SPA.QueryProcessor
     {
         public List<Declaration> Declarations { get; set; }
         public string Synonym { get; set; }
-        public SuchThat SuchThatClause { get; set; }
-        public With WithClause { get; set; }
-
-
-        public Query()
-        {
-            
-            
-        }
+        public SuchThat? SuchThatClause { get; set; }
+        public With? WithClause { get; set; }
     }
 }
