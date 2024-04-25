@@ -74,7 +74,7 @@ namespace SPA.QueryProcessor
                 else if (varType == "variable")
                 {
                     // return Pkb.Var
-                    // chyba tu ktoś nie przymyślał
+                 
                     // nie moge pobrac z PKB tej tablicy
                     throw new Exception("not implemented yet!");
                 }
