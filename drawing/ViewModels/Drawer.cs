@@ -100,7 +100,7 @@ namespace SPA.ViewModels
                 if(program.FirstProcedure != null)
                 {
                     Procedure first = program.FirstProcedure;
-                    procedures.Add(first.NextProcedure);
+                    procedures.Add(first);
                     while (first!.NextProcedure != null)
                     {
                         procedures.Add(first.NextProcedure);
