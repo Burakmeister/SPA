@@ -124,51 +124,31 @@ namespace SPA.QueryProcessor
         private List<string> Select(VarType varType)
         { 
             int programLength = Pkb.GetProgramLength();
-            switch (varType)
+            return varType switch
             {
-                case var type when type == VarType.STMT:
-                    return new List<string>(new string[] { "1", "-", programLength.ToString() });
-
-                case var type when type == VarType.ASSIGN:
-                    return Pkb.GetAssigns().ConvertAll<string>(x => x.ToString());
-
-                case var type when type == VarType.VARIABLE:
-                    return Pkb.GetVariables();
-
-                case var type when type == VarType.PROG_LINE:
-                    return new List<string>(new string[] { "1", "-", programLength.ToString() });
-
-                case var type when type == VarType.CONSTANT:
-                    return Pkb.GetConstants().ConvertAll<string>(x => x.ToString());
-
-                case var type when type == VarType.WHILE:
-                    return Pkb.GetWhiles().ConvertAll<string>(x => x.ToString());
-                
-                default:
-                    throw new Exception("Niepoprawny typ zmiennej!");
-            }
+                var type when type == VarType.STMT => new List<string>(new string[] { "1", "-", programLength.ToString() }),
+                var type when type == VarType.ASSIGN => Pkb.GetAssigns().ConvertAll<string>(x => x.ToString()),
+                var type when type == VarType.VARIABLE => Pkb.GetVariables(),
+                var type when type == VarType.PROG_LINE => new List<string>(new string[] { "1", "-", programLength.ToString() }),
+                var type when type == VarType.CONSTANT => Pkb.GetConstants().ConvertAll<string>(x => x.ToString()),
+                var type when type == VarType.WHILE => Pkb.GetWhiles().ConvertAll<string>(x => x.ToString()),
+                _ => throw new Exception("Niepoprawny typ zmiennej!"),
+            };
         }
 
         // przypadek z relacją bez with
         private List<string> SelectRelation(VarType varType, Relation relation)
         {
-            switch (relation)
+            return relation switch
             {
-                case var type when type is Follows:
-                    return FollowsRelation((type as Follows)!);
-                case var type when type is FollowsT:
-                    return FollowsTRelation((type as FollowsT)!);
-                case var type when type is Parent:
-                    return ParentRelation((type as Parent)!);
-                case var type when type is ParentT:
-                    return ParentTRelation((type as ParentT)!);
-                case var type when type is ModifiesS:
-                    return ModifiesSRelation((type as ModifiesS)!);
-                case var type when type is UsesS:
-                    return UsesSRelation((type as UsesS)!);
-                default:
-                    throw new Exception("Nieprawidłowa relacja!");
-            }
+                var type when type is Follows => FollowsRelation((type as Follows)!),
+                var type when type is FollowsT => FollowsTRelation((type as FollowsT)!),
+                var type when type is Parent => ParentRelation((type as Parent)!),
+                var type when type is ParentT => ParentTRelation((type as ParentT)!),
+                var type when type is ModifiesS => ModifiesSRelation((type as ModifiesS)!),
+                var type when type is UsesS => UsesSRelation((type as UsesS)!),
+                _ => throw new Exception("Nieprawidłowa relacja!"),
+            };
         }
 
         // relacja follow
@@ -253,12 +233,5 @@ namespace SPA.QueryProcessor
         {
             throw new Exception("Relation and With not implemented yet!");
         }
-
-
-
-        
-
-
-
     }
 }
