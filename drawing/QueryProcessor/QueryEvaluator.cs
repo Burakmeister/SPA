@@ -1,6 +1,7 @@
 ﻿using SPA.DesignEntities;
 using SPA.PKB;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,12 +12,10 @@ namespace SPA.QueryProcessor
     internal class QueryEvaluator
     {
         private IPkb Pkb;
-        private Dictionary<string, string> declarationsMap;
         private Relation? Relation;
         private string synonym;
         private With? With;
 
-        public List<string>? Return { get; set; } = null;
         public QueryEvaluator(Query query, IPkb pkb) 
         {
             Pkb = pkb;
@@ -24,8 +23,8 @@ namespace SPA.QueryProcessor
                 Relation = query.SuchThatClause.Relation;
             With = query.WithClause;
             synonym = query.Synonym;
-            declarationsMap = getDeclarations(query);
-            executeQuery();
+            Dictionary<string, string> declarationsMap = getDeclarations(query);
+            query.Result = executeQuery(declarationsMap);
         }
 
         // robię słownik deklaracji z ich jako klucze nazwami i jako wartości typami
@@ -43,51 +42,37 @@ namespace SPA.QueryProcessor
             return declarationsMap;
         }
 
-        private List<string> executeQuery()
+        private List<string> executeQuery(Dictionary<string, string> declarationsMap)
         {
-            if(Relation==null && With == null){
+            if(Relation==null && With == null)
+            {
                 string? varType;
-                if (declarationsMap.TryGetValue(synonym, out varType))
-                {
-                    throw new Exception("Próbujesz użyć niezadeklarowanej zmiennej!");
-                }
+                varType = declarationsMap[synonym];
                 if(varType == "stmt")
                 {
-                    // potrzebna by była lista statementow, ale to troche bez sensu
-                    // bo to wszystkie linie w sumie
-                    
-                    // można tu zwracać np. liczbę linii w kodzie ogólnie coś w stylu 1-(liczba linii)
-                    // więc można dodać w pkb możliwość pobrania tego
-                    // brakuje też możliwości pobrania całego programu z pkb
-                    throw new Exception("not implemented yet!");
+                    int programLength = Pkb.GetProgramLength();
+                    return new List<string>(new string[] {"0", "-", programLength.ToString()});
                 }
                 else if(varType == "assign")
                 {
-                    // tu potrzebna jest lista wszystkich assignow
-                    throw new Exception("not implemented yet!");
+                    return Pkb.GetAssigns().ConvertAll<string>(x => x.ToString());
                 }
                 else if (varType == "while")
                 {
-                    // potrzebna jest lista while'ow
-                    throw new Exception("not implemented yet!");
+                    return Pkb.GetWhiles().ConvertAll<string>(x => x.ToString());
                 }
                 else if (varType == "variable")
                 {
-                    // return Pkb.Var
-                 
-                    // nie moge pobrac z PKB tej tablicy
-                    throw new Exception("not implemented yet!");
+                    return Pkb.GetVariables();
                 }
                 else if (varType == "constant")
                 {
-                    // lista constantow
-                    throw new Exception("not implemented yet!");
+                    return Pkb.GetConstants().ConvertAll<string>(x => x.ToString());
                 }
                 else if (varType == "prog_line")
                 {
-                    // a tu to beka w sumie, nie mam pojecia jak to obsluzyc
-                    // sytuacja taka sama jak z stmt 
-                    throw new Exception("not implemented yet!");
+                    int programLength = Pkb.GetProgramLength();
+                    return new List<string>(new string[] { "0", "-", programLength.ToString() });
                 }
                 else
                 {

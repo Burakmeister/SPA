@@ -50,7 +50,7 @@ namespace SPA.PKB
 
         int GetVariablesSize();
 
-        ArrayList GetVariables();
+        List<string> GetVariables();
 
         int InsertProcedure(String procedureName);
 
@@ -60,20 +60,21 @@ namespace SPA.PKB
 
         int GetProcedureIndex(String ProcedureName);
 
-        ArrayList GetProcedures();
+        List<string> GetProcedures();
 
         int InsertAssign(int statementNumber);
 
-        ArrayList GetAssigns();
+        List<int> GetAssigns();
 
         int InsertWhile(int statementNumber);
 
-        ArrayList GetWhiles();
+        List<int> GetWhiles();
 
         int InsertConstant(int constant);
 
-        ArrayList GetConstants();
+        List<int> GetConstants();
 
+        int GetProgramLength();
 
         void ClearPkb();
     }

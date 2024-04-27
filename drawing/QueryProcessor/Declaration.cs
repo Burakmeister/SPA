@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SPA.QueryProcessor
 {
-    internal class Declaration
+    public class Declaration
     {
         public string DesignEntity { get; set; }
         public List<string> Synonyms { get; set; }

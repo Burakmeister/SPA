@@ -10,11 +10,11 @@ namespace SPA.PKB
         public Program? program { get; set; } = null;
 
         private static Pkb instance;
-        private ArrayList variables;
-        private ArrayList procedures;
-        private ArrayList whiles;
-        private ArrayList assigns;
-        private ArrayList constants;
+        private List<string> variables;
+        private List<string> procedures;
+        private List<int> whiles;
+        private List<int> assigns;
+        private List<int> constants;
 
         private int[] follows;
         private List<int>[] parents;
@@ -28,11 +28,11 @@ namespace SPA.PKB
         {
             programLength = statementCount; 
 
-            variables = new ArrayList();
-            procedures = new ArrayList();
-            whiles = new ArrayList();
-            assigns = new ArrayList();
-            constants = new ArrayList();
+            variables = new ();
+            procedures = new ();
+            whiles = new ();
+            assigns = new ();
+            constants = new ();
 
             modifies = new int[statementCount];
             InitializeArrayWithValue(modifies, -1);
@@ -270,7 +270,7 @@ namespace SPA.PKB
             return procedures.Count;
         }
 
-        public ArrayList GetProcedures()
+        public List<string> GetProcedures()
         {
             return procedures;
         }
@@ -313,7 +313,7 @@ namespace SPA.PKB
             return variables.Count;
         }
 
-        public ArrayList GetVariables()
+        public List<string> GetVariables()
         {
             return variables;
         }
@@ -325,7 +325,7 @@ namespace SPA.PKB
            return assigns.IndexOf(statementNumber);
         }
 
-        public ArrayList GetAssigns()
+        public List<int> GetAssigns()
         {
             return assigns;
         }
@@ -337,7 +337,7 @@ namespace SPA.PKB
             return whiles.IndexOf(statementNumber);
         }
 
-        public ArrayList GetWhiles()
+        public List<int> GetWhiles()
         {
             return whiles;
         }
@@ -349,7 +349,7 @@ namespace SPA.PKB
             return constants.IndexOf(constant);
         }
 
-        public ArrayList GetConstants()
+        public List<int> GetConstants()
         {
             return constants;
         }
@@ -362,5 +362,9 @@ namespace SPA.PKB
             InitializeLists(uses);
         }
 
+        public int GetProgramLength()
+        {
+            return programLength;
+        }
     }
 }

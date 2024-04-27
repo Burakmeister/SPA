@@ -1,4 +1,5 @@
 ﻿using SPA.PKB;
+using System.Windows.Documents;
 
 namespace SPA.QueryProcessor
 {
@@ -6,19 +7,18 @@ namespace SPA.QueryProcessor
     {
         private readonly QueryPreprocessor _preprocessor;
         private readonly QueryEvaluator _evaluator;
-        private readonly Query _query;
+        public Query Query { get; }
 
         // String do testu parsowania w preprocessorze
-        private readonly string query;
+        private readonly string _query;
 
         public QueryProcessorExec(string query, IPkb pkb)
         {
-            this.query = query;
+            this._query = query;
 
-            _query = new Query();
-            _preprocessor = new QueryPreprocessor(query, _query);
-            _evaluator = new QueryEvaluator(_query, pkb);
+            Query = new Query();
+            _preprocessor = new QueryPreprocessor(_query, Query);
+            _evaluator = new QueryEvaluator(Query, pkb);
         }
-
     }
 }

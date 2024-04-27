@@ -8,6 +8,7 @@ using System.Collections;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
+using System.Collections.Generic;
 
 namespace SPA.ViewModels
 {
@@ -18,6 +19,7 @@ namespace SPA.ViewModels
         public ICommand DrawNextProcedureCommand => throw new NotImplementedException();
         public ICommand DrawPrevProcedureCommand => throw new NotImplementedException();
         public string Code { get; set; } = "";
+        public string ResultQuery { get; set; } = "";
         private ArrayList procedures = new ArrayList();
         private int currentIndex = 0;
         private IPkb? pkb;
@@ -36,12 +38,14 @@ namespace SPA.ViewModels
                 pkb.ClearPkb();
                 relationFinder = new RelationFinder(procedures, pkb);
                 relationFinder.FillPKB();
+                MessageBox.Show("Parsing execute");
                 currentIndex = 0;
-                DrawerAST.DrawTree(procedures[currentIndex] as Procedure);
+                //DrawerAST.DrawTree(procedures[currentIndex] as Procedure);
+                //MessageBox.Show("Tree Drawed");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine(ex.Message);
+                MessageBox.Show(ex.Message);
             }
         });
         private string _codeQuery;
@@ -66,15 +70,29 @@ namespace SPA.ViewModels
 
         public void executeQuery(object param)
         {
-            string query = _codeQuery;
-            _processor = new QueryProcessorExec(query, pkb);
+            try
+            {
+                string query = _codeQuery;
+                _processor = new QueryProcessorExec(query, pkb);
+                List<string> results = _processor.Query.Result;
+                ResultQuery = "";
+                foreach (string result in results)
+                {
+                    ResultQuery += result + ' ';
+                }
+                OnPropertyChanged(nameof(ResultQuery));
+                MessageBox.Show("Query executed");
+            }catch(Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
 
-            MessageBox.Show("Query executed");
         }
 
 
         private void CompleteProceduresList()
         {
+            procedures.Clear();
             Program program;
             if (Parser.GetProgram() != null)
             {
@@ -82,12 +100,13 @@ namespace SPA.ViewModels
                 if(program.FirstProcedure != null)
                 {
                     Procedure first = program.FirstProcedure;
-                    procedures.Add(first);
+                    procedures.Add(first.NextProcedure);
                     while (first!.NextProcedure != null)
                     {
-                        procedures.Add(first.ProcName);
+                        procedures.Add(first.NextProcedure);
                         first = first.NextProcedure;
                     }
+
                 }
             }
 

@@ -181,7 +181,7 @@ namespace SPA.Parsing
             program = CreateProgram();
             ArrayList stringsList = new(strings);
 
-            lineNumber = 0;
+            lineNumber = 1;
 
             for(int i = 0; i < stringsList.Count-1; i++)
             {
