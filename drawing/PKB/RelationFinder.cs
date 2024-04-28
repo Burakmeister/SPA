@@ -187,8 +187,8 @@ namespace SPA.PKB
                     if (!CheckIfVarIsInVarTable(assign.Var.VarName))
                     {
                         pkb.InsertVariable(assign.Var.VarName);
-                        FindStatementVariables(assign.NextStatement);
                     }
+                    FindStatementVariables(assign.NextStatement);
                 }
                 else if (statement is While)
                 {
@@ -196,9 +196,9 @@ namespace SPA.PKB
                     if (!CheckIfVarIsInVarTable(stmtWhile.Var.VarName))
                     {
                         pkb.InsertVariable(stmtWhile.Var.VarName);
-                        FindStatementVariables(stmtWhile.NextStatement);
-                        FindStatementVariables(stmtWhile.StatementList.FirstStatement);
                     }
+                    FindStatementVariables(stmtWhile.NextStatement);
+                    FindStatementVariables(stmtWhile.StatementList.FirstStatement);
                 }
             }
         }
