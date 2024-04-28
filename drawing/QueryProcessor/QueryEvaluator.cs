@@ -158,10 +158,22 @@ namespace SPA.QueryProcessor
             string stmtRef2 = follows.StmtRef2.Value;
             if (stmtRef1 == "_" && stmtRef2 == "_")
             {
-                throw new Exception("Relacja z podłogą nieobsługiwana!");
+                List<string> retList = new();
+                int programLength = Pkb.GetProgramLength();
+                for (int i = 1; i < programLength; i++)
+                {
+                    foreach (int line in Pkb.GetFollows(i))
+                    {
+                        retList.Add("(" + i.ToString() + ", " + line.ToString() + ") ");
+                    }
+                }
+                return retList;
             }
             else if (stmtRef1 == "_")
             {
+                List<string> retList = new();
+                
+
                 throw new Exception("Relacja z podłogą nieobsługiwana!");
             }
             else if (stmtRef2 == "_")
@@ -177,8 +189,16 @@ namespace SPA.QueryProcessor
 
                 if(firstRef == 0 && secondRef == 0)
                 {
-                    //bool isFollowed = Pkb.IsFollowed(s)
-                    //return Pkb.GetFollows().ConvertAll<string>(x => x.ToString());
+                    List<string> retList = new();
+                    int programLength = Pkb.GetProgramLength();
+                    for (int i=1; i<programLength; i++)
+                    {
+                        foreach(int line in Pkb.GetFollows(i))
+                        {
+                            retList.Add("("+i.ToString()+", " + line.ToString() + ") ");
+                        }
+                    }
+                    return retList;
                 }
                 else if (firstRef == 0)
                 {
