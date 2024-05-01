@@ -78,6 +78,6 @@ namespace SPA.PKB
 
         List<int> GetAllStatements();
 
-        void ClearPkb();
+        void ClearPkb(int statementCount);
     }
 }

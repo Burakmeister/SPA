@@ -76,6 +76,10 @@ namespace SPA.PKB
             {
                 instance = new Pkb(statementcount);
             }
+            else
+            {
+                instance.ClearPkb(statementcount);
+            }          
             return instance;
         }
 
@@ -355,11 +359,23 @@ namespace SPA.PKB
             return constants;
         }
 
-        public void ClearPkb()
+        public void ClearPkb(int statementCount)
         {
-            InitializeArrayWithValue(modifies, -1);            
+            programLength = statementCount;
+
+            variables.Clear();
+            procedures.Clear();
+            whiles.Clear();
+            assigns.Clear();
+            constants.Clear();
+
+            modifies = new int[statementCount];
+            InitializeArrayWithValue(modifies, -1);
+            follows = new int[statementCount];
             InitializeArrayWithValue(follows, -1);
+            parents = new List<int>[statementCount];
             InitializeLists(parents);
+            uses = new List<int>[statementCount];
             InitializeLists(uses);
         }
 

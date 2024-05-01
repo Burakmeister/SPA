@@ -21,10 +21,10 @@ namespace SPA.PKB
             InsertWhiles();
             InsertAssigns();
             InsertConstants();
-            //InsertModifiesRel(); nie działa już
+            InsertModifiesRel();
             InsertFollowsRel();
-            //InsertParentRel(); tez juz nie dziala :((
-            //InsertUsesRel(); przykre
+            InsertParentRel();
+            InsertUsesRel();
             InsertProcedures();
         }
 
