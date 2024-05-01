@@ -15,6 +15,7 @@ namespace SPA.PKB
         private List<int> whiles;
         private List<int> assigns;
         private List<int> constants;
+        private List<int> statements;
 
         private int[] follows;
         private List<int>[] parents;
@@ -365,6 +366,11 @@ namespace SPA.PKB
         public int GetProgramLength()
         {
             return programLength;
+        }
+
+        public List<int> GetAllStatements()
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

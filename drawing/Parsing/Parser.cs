@@ -13,7 +13,7 @@ namespace SPA.Parsing
 {
     public class Parser : IParser
     {
-        public Program? program { get; set; } = null;
+        private Program? program { get; set; } = null;
         private int lineNumber;
 
         public Program CreateProgram()
@@ -65,6 +65,7 @@ namespace SPA.Parsing
                     }
                     prevStatement = statement;
                 }
+                lineNumber--;
                 return newWhile;
             }
             else
@@ -181,15 +182,16 @@ namespace SPA.Parsing
             program = CreateProgram();
             ArrayList stringsList = new(strings);
 
-            lineNumber = 1;
+            lineNumber = 0;
 
-            for(int i = 0; i < stringsList.Count-1; i++)
+            for(int i = 0; i < stringsList.Count-1;)
             {
                 if (stringsList[i] as string == "procedure")
                 {
                     int procedureStart = i;
-                    int procedureLength = FindClosingBracket(stringsList.GetRange(procedureStart, stringsList.Count - procedureStart));
+                    int procedureLength = FindClosingBracket(stringsList.GetRange(procedureStart, stringsList.Count - procedureStart)) + 1;
                     procedure = CreateProcedure(stringsList.GetRange(procedureStart, procedureLength));
+                    i += procedureLength;
                     if (program!.FirstProcedure == null)
                     {
                         program.FirstProcedure = procedure;
@@ -199,7 +201,6 @@ namespace SPA.Parsing
                         prevProcedure!.NextProcedure = procedure;
                     }
                     prevProcedure = procedure;
-                    i+=procedureLength;
                 }
             }
             return lineNumber;

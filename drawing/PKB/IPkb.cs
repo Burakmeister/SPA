@@ -76,6 +76,8 @@ namespace SPA.PKB
 
         int GetProgramLength();
 
+        List<int> GetAllStatements();
+
         void ClearPkb();
     }
 }

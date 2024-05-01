@@ -80,7 +80,7 @@ namespace SPA.QueryProcessor
             query.Result = ExecuteQuery(declarationsMap);
         }
 
-        // robię słownik deklaracji z ich jako klucze nazwami i jako wartości typami
+        // robię słownik deklaracji jako klucze z ich nazwami i jako wartości typami
         private Dictionary<string, string> getDeclarations(Query query)
         {
             Dictionary<string, string> declarationsMap = new Dictionary<string, string>();
@@ -141,9 +141,9 @@ namespace SPA.QueryProcessor
         {
             return relation switch
             {
-                var type when type is Follows => FollowsRelation((type as Follows)!),
+                var type when type is Follows => FollowsRelation((type as Follows)!, varType),
                 var type when type is FollowsT => FollowsTRelation((type as FollowsT)!),
-                var type when type is Parent => ParentRelation((type as Parent)!),
+                var type when type is Parent => ParentRelation((type as Parent)!, varType),
                 var type when type is ParentT => ParentTRelation((type as ParentT)!),
                 var type when type is ModifiesS => ModifiesSRelation((type as ModifiesS)!),
                 var type when type is UsesS => UsesSRelation((type as UsesS)!),
@@ -151,11 +151,14 @@ namespace SPA.QueryProcessor
             };
         }
 
-        // relacja follow
-        private List<string> FollowsRelation(Follows follows)
+        // relacja follow (chyba działa)
+        private List<string> FollowsRelation(Follows follows, VarType varType)
         {
             string stmtRef1 = follows.StmtRef.Value;
             string stmtRef2 = follows.StmtRef2.Value;
+
+            List<int> lines = GetStatementLines(varType);
+
             if (stmtRef1 == "_" && stmtRef2 == "_")
             {
                 List<string> retList = new();
@@ -172,13 +175,42 @@ namespace SPA.QueryProcessor
             else if (stmtRef1 == "_")
             {
                 List<string> retList = new();
-                
-
-                throw new Exception("Relacja z podłogą nieobsługiwana!");
+                int secondRef;
+                int.TryParse(stmtRef2, out secondRef);
+                if (secondRef == 0)
+                {
+                    List<int> followsList = GetAllFollows();
+                    return followsList.Intersect(lines).ToList().ConvertAll<string>(x => x.ToString());
+                }
+                else
+                {
+                    List<int> tmpFollows = Pkb.GetFollows(secondRef);
+                    if (tmpFollows.Count > 0)
+                    {
+                        return tmpFollows.ConvertAll<string>(x => x.ToString());
+                    }
+                    return new List<string>();
+                }
             }
             else if (stmtRef2 == "_")
             {
-                throw new Exception("Relacja z podłogą nieobsługiwana!");
+                List<string> retList = new();
+                int secondRef;
+                int.TryParse(stmtRef2, out secondRef);
+                if (secondRef == 0)
+                {
+                    List<int> followedList = GetAllFollowed();
+                    return followedList.Intersect(lines).ToList().ConvertAll<string>(x => x.ToString());
+                }
+                else
+                {
+                    List<int> tmpFollowed = Pkb.GetFollowed(secondRef);
+                    if (tmpFollowed.Count > 0)
+                    {
+                        return tmpFollowed.ConvertAll<string>(x => x.ToString());
+                    }
+                    return new List<string>();
+                }
             }
             else
             {
@@ -195,7 +227,7 @@ namespace SPA.QueryProcessor
                     {
                         foreach(int line in Pkb.GetFollows(i))
                         {
-                            retList.Add("("+i.ToString()+", " + line.ToString() + ") ");
+                            retList.Add("("+line.ToString()+", " + i.ToString() + ") ");
                         }
                     }
                     return retList;
@@ -214,7 +246,53 @@ namespace SPA.QueryProcessor
                     return new List<string>(new string[]{isFollowed.ToString()});
                 }
             }
-            throw new Exception("");
+        }
+
+        private List<int> GetAllFollows() 
+        {
+            int linesNumber = Pkb.GetProgramLength();
+            List<int> toRet = new();
+            for(int i=1; i<linesNumber; i++)
+            {
+                if(Pkb.GetFollows(i).Count>0)
+                    toRet.Add(Pkb.GetFollows(i)[0]);
+            }
+            return toRet;
+        }
+
+        private List<int> GetAllParents()
+        {
+            int linesNumber = Pkb.GetProgramLength();
+            List<int> toRet = new();
+            for (int i = 1; i < linesNumber; i++)
+            {
+                if (Pkb.GetParent(i) != 0)
+                    toRet.Add(Pkb.GetParent(i));
+            }
+            return toRet;
+        }
+
+        private List<int> GetAllChildren()
+        {
+            int linesNumber = Pkb.GetProgramLength();
+            List<int> toRet = new();
+            for (int i = 1; i < linesNumber; i++)
+            {
+                if (Pkb.GetChildren(i).Count > 0)
+                    toRet.Add(Pkb.GetChildren(i)[0]);
+            }
+            return toRet;
+        }
+
+        private List<int> GetAllFollowed() {
+            int linesNumber = Pkb.GetProgramLength();
+            List<int> toRet = new();
+            for (int i = 1; i < linesNumber; i++)
+            {
+                if (Pkb.GetFollowed(i).Count > 0)
+                    toRet.Add(Pkb.GetFollowed(i)[0]);
+            }
+            return toRet;
         }
 
         private List<string> UsesSRelation(UsesS usesS)
@@ -232,9 +310,98 @@ namespace SPA.QueryProcessor
             throw new NotImplementedException();
         }
 
-        private List<string> ParentRelation(Parent parent)
+        // prawie działa
+        private List<string> ParentRelation(Parent parent, VarType varType)
         {
-            throw new NotImplementedException();
+            string stmtRef1 = parent.StmtRef.Value;
+            string stmtRef2 = parent.StmtRef2.Value;
+
+            List<int> lines = GetStatementLines(varType);
+
+            if (stmtRef1 == "_" && stmtRef2 == "_")
+            {
+                List<string> retList = new();
+                int programLength = Pkb.GetProgramLength();
+                for (int i = 1; i < programLength; i++)
+                {
+                    retList.Add("(" + i.ToString() + ", " + Pkb.GetParent(i).ToString() + ") ");
+                }
+                return retList;
+            }
+            else if (stmtRef1 == "_")
+            {
+                List<string> retList = new();
+                int secondRef;
+                int.TryParse(stmtRef2, out secondRef);
+                if (secondRef == 0)
+                {
+                    List<int> childrenList = GetAllChildren();
+                    return childrenList.Intersect(lines).ToList().ConvertAll<string>(x => x.ToString());
+                }
+                else
+                {
+                    List<int> childrenList = Pkb.GetChildren(secondRef);
+                    if (childrenList.Count > 0)
+                    {
+                        return childrenList.ConvertAll<string>(x => x.ToString());
+                    }
+                    return new List<string>();
+                }
+            }
+            else if (stmtRef2 == "_")
+            {
+                List<string> retList = new();
+                int secondRef;
+                int.TryParse(stmtRef2, out secondRef);
+                if (secondRef == 0)
+                {
+                    List<int> parentsList = GetAllParents();
+                    return parentsList.Intersect(lines).ToList().ConvertAll<string>(x => x.ToString());
+                }
+                else
+                {
+                    int tmpFollowed = Pkb.GetParent(secondRef);
+                    if (tmpFollowed != 0)
+                    {
+                        return new List<string> (new string[] { tmpFollowed.ToString() });
+                    }
+                    return new List<string>();
+                }
+            }
+            else
+            {
+                int firstRef;
+                int secondRef;
+                int.TryParse(stmtRef1, out firstRef);
+                int.TryParse(stmtRef2, out secondRef);
+
+                if (firstRef == 0 && secondRef == 0)
+                {
+                    List<string> retList = new();
+                    int programLength = Pkb.GetProgramLength();
+                    for (int i = 1; i < programLength; i++)
+                    {
+                        foreach (int line in Pkb.GetChildren(i))
+                        {
+                            retList.Add("(" + line.ToString() + ", " + i.ToString() + ") ");
+                        }
+                    }
+                    return retList;
+                }
+                else if (firstRef == 0)
+                {
+                    return Pkb.GetChildren(secondRef).ConvertAll<string>(x => x.ToString());
+                }
+                else if (secondRef == 0)
+                {
+                    return Pkb.GetChildren(firstRef).ConvertAll<string>(x => x.ToString());
+                }
+                else
+                {
+                    bool isFollowed = Pkb.IsParent(firstRef, secondRef);
+                    return new List<string>(new string[] { isFollowed.ToString() });
+                }
+            }
         }
 
         private List<string> FollowsTRelation(FollowsT followsT)
@@ -252,6 +419,19 @@ namespace SPA.QueryProcessor
         private List<string> SelectRelationWith(VarType varType)
         {
             throw new Exception("Relation and With not implemented yet!");
+        }
+
+        private List<int> GetStatementLines(VarType varType)
+        {
+            int programLength = Pkb.GetProgramLength();
+            return varType switch
+            {
+                var type when type == VarType.STMT => new List<int>(Enumerable.Range(1, programLength).ToArray()),
+                var type when type == VarType.ASSIGN => Pkb.GetAssigns(),
+                var type when type == VarType.PROG_LINE => new List<int>(Enumerable.Range(1, programLength).ToArray()),
+                var type when type == VarType.WHILE => Pkb.GetWhiles(),
+                _ => throw new Exception("Błąd składniowy!"),
+            };
         }
     }
 }
