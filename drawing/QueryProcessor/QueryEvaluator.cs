@@ -146,7 +146,7 @@ namespace SPA.QueryProcessor
                 var type when type is Parent => ParentRelation((type as Parent)!, varType),
                 var type when type is ParentT => ParentTRelation((type as ParentT)!),
                 var type when type is ModifiesS => ModifiesSRelation((type as ModifiesS)!),
-                var type when type is UsesS => UsesSRelation((type as UsesS)!),
+                var type when type is UsesS => UsesSRelation((type as UsesS)!, varType),
                 _ => throw new Exception("Nieprawidłowa relacja!"),
             };
         }
@@ -295,9 +295,45 @@ namespace SPA.QueryProcessor
             return toRet;
         }
 
-        private List<string> UsesSRelation(UsesS usesS)
+        private List<string> UsesSRelation(UsesS usesS, VarType varType)
         {
-            throw new NotImplementedException();
+            string stmtRef = usesS.StmtRef.Value;
+            string entRef = usesS.EntRef.Value;
+
+            List<int> lines = GetStatementLines(varType);
+
+            int stmt;
+            int.TryParse(stmtRef, out stmt);
+
+            if (entRef == "_")
+            {
+                int programLength = Pkb.GetProgramLength();
+                if (stmt == 0)
+                {
+                    List<string> retList = new();
+                    for (int i = 1; i < programLength; i++)
+                    {
+                        foreach (Variable var in Pkb.GetUsed(i))
+                        {
+                            retList.Add("(" + i.ToString() + ", " + var.VarName + ") ");
+                        }
+                    }
+                    return retList;
+                }
+                else
+                {
+                    return Pkb.GetUsed(stmt).ConvertAll<string>(x => x.VarName);
+                }
+            }
+            else if (stmt == 0)
+            {
+                List<string> retList = new();
+                return retList;
+            } else if (stmtRef == "_")
+            {
+                throw new Exception("First argument of Uses cannot be \"_\"");
+            }
+            throw new Exception("Something wrong!");
         }
 
         private List<string> ModifiesSRelation(ModifiesS modifiesS)

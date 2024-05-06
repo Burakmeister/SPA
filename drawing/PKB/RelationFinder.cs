@@ -340,6 +340,7 @@ namespace SPA.PKB
             } else if (statement is While)
             {
                 While stmtWhile = (statement as While)!;
+                pkb!.SetUses(statement, stmtWhile.Var);
                 FindStatementUses(stmtWhile!.StatementList!.FirstStatement!);
             }
             else if (statement != null)
