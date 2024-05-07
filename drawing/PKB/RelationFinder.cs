@@ -17,15 +17,30 @@ namespace SPA.PKB
        
         public void FillPKB()
         {
-            InsertVariables();
-            InsertWhiles();
-            InsertAssigns();
-            InsertConstants();
-            InsertModifiesRel();
-            InsertFollowsRel();
-            InsertParentRel();
-            InsertUsesRel();
             InsertProcedures();
+            InsertAbstractionsAndRelations();
+        }
+
+        private void InsertAbstractionsAndRelations()
+        {
+            for (int i = 0; i < procedures.Count; i++)
+            {
+                FindProcedureAbstractionsAndRelations((Procedure)procedures[i]!);
+            }
+        }
+        private void FindProcedureAbstractionsAndRelations(Procedure procedure)
+        {
+            if (procedure.StatementList!.FirstStatement != null)
+            {
+                FindStatementWhiles(procedure.StatementList.FirstStatement);
+                FindStatementAssigns(procedure.StatementList.FirstStatement);
+                FindStatementConstants(procedure.StatementList.FirstStatement);
+                FindStatementVariables(procedure.StatementList.FirstStatement);
+                FindStatementModifies(procedure.StatementList.FirstStatement);
+                FindStatementFollowed(procedure.StatementList.FirstStatement);
+                FindStatementChildren(procedure.StatementList.FirstStatement);
+                FindStatementUses(procedure.StatementList.FirstStatement);
+            }
         }
 
         private void InsertProcedures() {
@@ -33,22 +48,6 @@ namespace SPA.PKB
             {
                 Procedure proc = (Procedure)procedures[i];
                pkb.InsertProcedure(proc.ProcName);
-            }
-        }
-
-        private void InsertWhiles()
-        {
-            for (int i = 0; i < procedures.Count; i++)
-            {
-                FindProcedureWhiles((Procedure)procedures[i]!);
-            }
-        }
-
-        private void FindProcedureWhiles(Procedure procedure)
-        {
-            if (procedure.StatementList!.FirstStatement != null)
-            {
-                FindStatementWhiles(procedure.StatementList.FirstStatement);
             }
         }
 
@@ -70,22 +69,6 @@ namespace SPA.PKB
             } 
         }
 
-        private void InsertAssigns()
-        {
-            for (int i = 0; i < procedures.Count; i++)
-            {
-                FindProcedureAssigns((Procedure)procedures[i]!);
-            }
-        }
-
-        private void FindProcedureAssigns(Procedure procedure)
-        {
-            if (procedure.StatementList!.FirstStatement != null)
-            {
-                FindStatementAssigns(procedure.StatementList.FirstStatement);
-            }
-        }
-
         private void FindStatementAssigns(Statement statement)
         {
             if (statement != null)
@@ -103,22 +86,6 @@ namespace SPA.PKB
                 }
             }
            
-        }
-
-        private void InsertConstants()
-        {
-            for (int i = 0; i < procedures.Count; i++)
-            {
-                FindProcedureConstants((Procedure)procedures[i]!);
-            }
-        }
-
-        private void FindProcedureConstants(Procedure procedure)
-        {
-            if (procedure.StatementList!.FirstStatement != null)
-            {
-                FindStatementConstants(procedure.StatementList.FirstStatement);
-            }
         }
 
         private void FindStatementConstants(Statement statement)
@@ -157,22 +124,6 @@ namespace SPA.PKB
                 ExprPlus exprPlus = (ExprPlus)expr;
                 FindExprConstants(exprPlus.LeftExpr);
                 FindExprConstants(exprPlus.RightExpr);
-            }
-        }
-
-        private void InsertVariables()
-        {
-            for (int i = 0; i < procedures.Count; i++)
-            {
-                FindProcedureVariables((Procedure)procedures[i]!);
-            }
-        }
-
-        private void FindProcedureVariables(Procedure procedure)
-        {
-            if (procedure.StatementList!.FirstStatement != null)
-            {
-                FindStatementVariables(procedure.StatementList.FirstStatement);
             }
         }
 
@@ -215,21 +166,6 @@ namespace SPA.PKB
             }
         }
 
-        private void InsertModifiesRel()
-        {
-            for (int i = 0; i < procedures.Count; i++)
-            {
-                FindModifiesRelInProcedure((Procedure)procedures[i]);
-            }
-        }
-        private void FindModifiesRelInProcedure(Procedure procedure)
-        {
-            if (procedure.StatementList.FirstStatement != null)
-            {
-                FindStatementModifies(procedure.StatementList.FirstStatement);
-            }
-        }
-
         private void FindStatementModifies(Statement statement)
         {
             if (statement != null)
@@ -250,22 +186,6 @@ namespace SPA.PKB
             }
         }
 
-        private void InsertFollowsRel()
-        {
-            for (int i = 0; i < procedures.Count; i++)
-            {
-                FindFollowsRelInProcedure((Procedure)procedures[i]!);
-            }
-        }
-
-        private void FindFollowsRelInProcedure(Procedure procedure)
-        {
-            if (procedure.StatementList.FirstStatement != null)
-            {
-                FindStatementFollowed(procedure.StatementList.FirstStatement);
-            }
-        }
-
         private void FindStatementFollowed(Statement statement)
         {
             if (statement.NextStatement != null)
@@ -276,22 +196,6 @@ namespace SPA.PKB
             {
                 While stmWhile = statement as While;
                 FindStatementFollowed(stmWhile.StatementList.FirstStatement);
-            }
-        }
-
-        private void InsertParentRel()
-        {
-            for (int i = 0; i < procedures.Count; i++)
-            {
-                FindParentRelInProcedure((Procedure)procedures[i]!);
-            }
-        }
-
-        private void FindParentRelInProcedure(Procedure procedure)
-        {
-            if (procedure.StatementList.FirstStatement != null)
-            {
-                FindStatementChildren(procedure.StatementList.FirstStatement);
             }
         }
 
@@ -310,22 +214,6 @@ namespace SPA.PKB
             } else if (statement != null)
             {
                 FindStatementChildren(statement.NextStatement);
-            }
-        }
-
-        private void InsertUsesRel()
-        {
-            for (int i = 0; i < procedures.Count; i++)
-            {
-                FindUsesRelInProcedure((Procedure)procedures[i]!);
-            }
-        }
-
-        private void FindUsesRelInProcedure(Procedure procedure)
-        {
-            if (procedure.StatementList!.FirstStatement != null)
-            {
-                FindStatementUses(procedure.StatementList.FirstStatement);
             }
         }
 

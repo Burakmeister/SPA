@@ -8,6 +8,7 @@ using System.Linq;
 using System.Runtime.ConstrainedExecution;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Xps.Serialization;
 
 namespace SPA.QueryProcessor
 {
@@ -304,13 +305,15 @@ namespace SPA.QueryProcessor
 
             int stmt;
             int.TryParse(stmtRef, out stmt);
+            List<string> retList = new();
+            int programLength = Pkb.GetProgramLength();
 
             if (entRef == "_")
             {
-                int programLength = Pkb.GetProgramLength();
+               
                 if (stmt == 0)
                 {
-                    List<string> retList = new();
+                   
                     for (int i = 1; i < programLength; i++)
                     {
                         foreach (Variable var in Pkb.GetUsed(i))
@@ -327,11 +330,55 @@ namespace SPA.QueryProcessor
             }
             else if (stmt == 0)
             {
-                List<string> retList = new();
+                if (entRef.ElementAt(0).Equals("\""))
+                {
+                    entRef = entRef.Substring(1, entRef.Length - 2);
+                    foreach(int i in Pkb.GetUses(entRef))
+                    {
+                        retList.Add(i.ToString());
+                    }
+                }
+                else
+                {
+                    // tutaj jak jest synonym stmtRef i synonym entRef
+
+                    for (int i = 1; i < programLength; i++)
+                    {
+                        foreach (Variable var in Pkb.GetUsed(i))
+                        {
+                            retList.Add("(" + i.ToString() + ", " + var.VarName + ") ");
+                        }
+                    }
+                    return retList;
+                }
                 return retList;
             } else if (stmtRef == "_")
             {
                 throw new Exception("First argument of Uses cannot be \"_\"");
+            }
+            else
+            {
+                // (1,var), (1,"x")
+                if (entRef.ElementAt(0).Equals("\""))
+                {
+                    entRef = entRef.Substring(1, entRef.Length - 2);
+                    foreach (int i in Pkb.GetUses(entRef))
+                    {
+                        if (i == stmt)
+                        {
+                            retList.Add("True");
+                            return retList;
+                        }
+                    }
+                }
+                else
+                {
+                    foreach (Variable var in Pkb.GetUsed(stmt))
+                    {
+                        retList.Add (var.VarName);
+                    }
+                    return retList;
+                }
             }
             throw new Exception("Something wrong!");
         }
