@@ -2,6 +2,7 @@
 using SPA.Exceptions;
 using System.Collections.Generic;
 using System.Collections;
+using System.Linq;
 
 namespace SPA.PKB
 {
@@ -20,7 +21,7 @@ namespace SPA.PKB
         private int[] follows;
         private List<int>[] parents;
         private List<int>[] uses;
-        private int[] modifies;
+        private List<int>[] modifies;
 
         public int programLength;
 
@@ -35,8 +36,8 @@ namespace SPA.PKB
             assigns = new ();
             constants = new ();
 
-            modifies = new int[statementCount];
-            InitializeArrayWithValue(modifies, -1);
+            modifies = new List<int>[statementCount];
+            InitializeLists(modifies);
             follows = new int[statementCount];
             InitializeArrayWithValue(follows, -1);
             parents = new List<int>[statementCount];
@@ -116,53 +117,53 @@ namespace SPA.PKB
             return false;
         }
 
-        public void SetModifies(Statement statement, Variable variable)
+        public void SetModifies(int statement, string variable)
         {
-            modifies[statement.LineNumber] = GetVariableIndex(variable.VarName);
+            if (!modifies[statement].Contains(GetVariableIndex(variable)))
+                modifies[statement].Add(GetVariableIndex(variable));
         }
 
         public List<Variable> GetModified(int statementNumber)
         {
-            int variableIndex = modifies[statementNumber];
-            if (variableIndex >= 0)
-            {
-                string variableName = (string)variables[variableIndex];
-                Variable var = new Variable(variableName, 0);
-                return new List<Variable>() { var };
-            }
-            else
-            {
-                    throw new OutOfBoundsIndexException();
-            }
+            List<int> modifiedVariables = modifies[statementNumber];
+            List<Variable> variables = new List<Variable>();
 
+            foreach (int index in modifiedVariables)
+            {
+                string variableName = (string)this.variables[index];
+                Variable var = new Variable(variableName, 0);
+                variables.Add(var);
+            }
+            return variables;
         }
 
         public List<int> GetModifies(string variable)
         {
-            List<int> result = new List<int>();
+            List<int> statements = new List<int>();
             int varIndex = GetVariableIndex(variable);
             for (int i = 0; i < modifies.Length; i++)
             {
-                if (modifies[i] == varIndex)
+                if (modifies[i].Contains(varIndex))
                 {
-                    result.Add(i);
+                    statements.Add(i);
                 }
             }
-            return result;
+            return statements;
         }
 
         public bool IsModified(string variable, int statement)
         {
-            if (modifies[statement] == GetVariableIndex(variable))
+            if (modifies[statement].Contains(GetVariableIndex(variable)))
             {
                 return true;
             }
             return false;
         }
 
-        public void SetUses(Statement statement, Variable variable)
+        public void SetUses(int statement, string variable)
         {
-            uses[statement.LineNumber].Add(GetVariableIndex(variable.VarName));
+            if (!uses[statement].Contains(GetVariableIndex(variable)))
+                uses[statement].Add(GetVariableIndex(variable));
         }
 
         public List<Variable> GetUsed(int statement)
@@ -369,8 +370,8 @@ namespace SPA.PKB
             assigns.Clear();
             constants.Clear();
 
-            modifies = new int[statementCount];
-            InitializeArrayWithValue(modifies, -1);
+            modifies = new List<int>[statementCount];
+            InitializeLists(modifies);
             follows = new int[statementCount];
             InitializeArrayWithValue(follows, -1);
             parents = new List<int>[statementCount];

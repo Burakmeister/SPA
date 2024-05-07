@@ -18,7 +18,7 @@ namespace SPA.PKB
 
         bool IsFollowed(int statementNumber, int nextStatement);
 
-        void SetUses(Statement statement, Variable variable);
+        void SetUses(int statement, string variable);
 
         List<Variable> GetUsed(int statement);
 
@@ -26,7 +26,7 @@ namespace SPA.PKB
 
         bool IsUsed(string variable,int statement);
 
-        void SetModifies(Statement statement, Variable variable);
+        void SetModifies(int statement, string variable);
 
         List<Variable> GetModified(int statementNumber);
 

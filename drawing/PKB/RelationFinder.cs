@@ -1,6 +1,7 @@
 ﻿using SPA.DesignEntities;
 using System;
 using System.Collections;
+using System.Security.Cryptography;
 
 namespace SPA.PKB
 {
@@ -19,6 +20,21 @@ namespace SPA.PKB
         {
             InsertProcedures();
             InsertAbstractionsAndRelations();
+            InsertContainerUsesAndModifies();
+        }
+
+        private void InsertContainerUsesAndModifies()
+        {
+            foreach (int wh in pkb.GetWhiles())
+            {
+                foreach (int child in pkb.GetChildren(wh))
+                {
+                    pkb.GetUsed(child).ForEach(var =>
+                        pkb.SetUses(wh, var.VarName));
+                    pkb.GetModified(child).ForEach(var =>
+                        pkb.SetModifies(wh, var.VarName));
+                }
+            }
         }
 
         private void InsertAbstractionsAndRelations()
@@ -173,7 +189,7 @@ namespace SPA.PKB
                 if (statement is Assign)
                 {
                     Assign assign = statement as Assign;
-                    pkb.SetModifies(assign, assign.Var);
+                    pkb.SetModifies(assign.LineNumber, assign.Var.VarName);
                     FindStatementModifies(assign.NextStatement);
                 }
                 else if (statement is While)
@@ -228,7 +244,7 @@ namespace SPA.PKB
             } else if (statement is While)
             {
                 While stmtWhile = (statement as While)!;
-                pkb!.SetUses(statement, stmtWhile.Var);
+                pkb!.SetUses(statement.LineNumber, stmtWhile.Var.VarName);
                 FindStatementUses(stmtWhile!.StatementList!.FirstStatement!);
             }
             else if (statement != null)
@@ -245,7 +261,7 @@ namespace SPA.PKB
                 if (factor is Variable)
                 {
                     Variable variable = (Variable)factor;
-                    pkb!.SetUses(statement, variable);
+                    pkb!.SetUses(statement.LineNumber, variable.VarName);
                 }
             } else if (expr is ExprPlus)
             {
