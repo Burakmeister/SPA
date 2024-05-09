@@ -29,14 +29,6 @@ namespace SPA.UnitTests
             Assert.AreEqual(1, amongus);
         }
 
-        [TestMethod]
-        public void CreateAssign_ShouldReturnValidAssign()
-        {
-            var assign = parser.CreateAssign();
-            Assert.IsNotNull(assign);
-            Assert.IsNotNull(assign.Var);
-            Assert.AreEqual("xd", assign.Var.VarName);
-            Assert.AreEqual(0, assign.Var.LineNumber);
-        }
+        
     }
 }

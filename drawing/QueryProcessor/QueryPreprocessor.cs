@@ -69,7 +69,7 @@ namespace SPA.QueryProcessor
         }
 
 
-        private void ValidateQuery()
+        public void ValidateQuery()
 
         {
             // Zapytanie od razu dzielimy na tokeny, aby się pozbyć problemu z białymi znakami
