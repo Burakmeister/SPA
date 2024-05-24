@@ -89,23 +89,45 @@ namespace SPA.PKB
             follows[firstStatement.LineNumber] = nextStatement.LineNumber;
         }
 
-        public List<int> GetFollowed(int statementNumber)
+        public int GetFollowed(int statementNumber)
         {
-            return new List<int>() { follows[statementNumber] };
+            return follows[statementNumber] ;
         }
 
-        public List<int> GetFollows(int statementNumber)
+        public int GetFollows(int statementNumber)
         {
-            List<int> result = new List<int>();
+            int result = -1;
 
             for (int i = 0; i < follows.Length; i++)
             {
                 if (follows[i] == statementNumber)
                 {
-                    result.Add(i);
+                    result = i;
                 }
             }
             return result;
+        }
+
+        public List<int> GetAllFollowed()
+        {
+            List<int> toRet = new();
+            for (int i = 1; i < programLength; i++)
+            {
+                if (GetFollowed(i) != -1)
+                    toRet.Add(i);
+            }
+            return toRet;
+        }
+
+        public List<int> GetAllFollows()
+        {
+             List<int> toRet = new();
+            for (int i = 1; i < programLength; i++)
+            {
+                if (GetFollowed(i) != -1)
+                    toRet.Add(GetFollowed(i));
+            }
+            return toRet;
         }
 
         public bool IsFollowed(int firstStatement, int nextStatement)
@@ -224,6 +246,27 @@ namespace SPA.PKB
             }
 
             return -1; //czy to jest dobrze?
+        }
+
+        public List<int> GetAllParents()
+        {
+            List<int> toRet = new();
+            for (int i = 1; i < programLength; i++)
+            {
+                if (GetChildren(i).Count > 0)
+                    toRet.Add(i);
+            }
+            return toRet;
+        }
+        public List<int> GetAllChildren()
+        {
+            List<int> toRet = new();
+            for (int i = 1; i < programLength; i++)
+            {
+                if (GetChildren(i).Count > 0)
+                    toRet.Add(GetChildren(i)[0]);
+            }
+            return toRet;
         }
 
         public bool IsParent(int parentStatement, int childStatement)
@@ -389,5 +432,6 @@ namespace SPA.PKB
         {
             throw new System.NotImplementedException();
         }
+
     }
 }

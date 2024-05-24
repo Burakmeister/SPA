@@ -30,7 +30,7 @@ namespace SPA.QueryProcessor
             {
                 { "Follows",
                     (2, new[] { TokenType.IDENT, TokenType.INTEGER }, new[] { TokenType.IDENT, TokenType.INTEGER },
-                    (arg1, arg2) => new Follows { StmtRef = arg1, StmtRef2 = arg2 },
+                    (arg1, arg2) => new Follows { leftStmtRef = arg1, rightStmtRef = arg2 },
                     null)
                 },
                 { "Follows*",
@@ -73,7 +73,7 @@ namespace SPA.QueryProcessor
 
         {
             // Zapytanie od razu dzielimy na tokeny, aby się pozbyć problemu z białymi znakami
-            string pattern = @"(\s+|;|\.|\(|\)|,)"; // separatory
+            string pattern = @"(\s+|;|\.|\(|\)|,|<|>)"; // separatory
             parts = Regex.Split(query, pattern);
             parts = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray(); // usuń puste elementy
 
@@ -81,7 +81,7 @@ namespace SPA.QueryProcessor
             // Wsm bez różnicy, to strata pamięci wielkości małej listy
             _query.Declarations = ValidateDeclarations();
             Match("Select");
-            _query.Synonym = Match(TokenType.IDENT).Value;
+            _query.Synonyms = ValidateQuerySynonyms();//Match(TokenType.IDENT).Value;
 
             // Sprawdź dwa następne tokeny
             if (Peek(1) == "such" && Peek(2) == "that") 
@@ -125,6 +125,28 @@ namespace SPA.QueryProcessor
             }
 
             return declarations;
+        }
+
+        public List<string> ValidateQuerySynonyms()
+        {
+            List<string> synonyms = new List<string>();
+            if (Peek(1) == "<")
+            {
+                Advance();
+                synonyms.Add(Match(TokenType.IDENT).Value);
+                while (Peek() == ",")
+                {
+                    Advance();
+                    synonyms.Add(Match(TokenType.IDENT).Value);
+                }
+                Advance();
+              
+            }
+            else
+            {
+                synonyms.Add(Match(TokenType.IDENT).Value);
+            }
+            return synonyms;
         }
 
         public List<string> ValidateSynonyms()

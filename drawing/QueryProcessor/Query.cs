@@ -8,9 +8,9 @@ namespace SPA.QueryProcessor
 {
     public class Query
     {
-        public List<string> Result { get; set; } = null;
+        public Dictionary<string, List<string>> Result { get; set; } = null;
         public List<Declaration> Declarations { get; set; }
-        public string Synonym { get; set; }
+        public List<string> Synonyms { get; set; } = null;
         public SuchThat? SuchThatClause { get; set; }
         public With? WithClause { get; set; }
     }

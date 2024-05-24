@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SPA.PKB;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,5 +9,6 @@ namespace SPA.QueryProcessor
 {
     public abstract class Relation
     {
+        //public abstract Dictionary<string, List<string>> EvaluateRelation(Dictionary<string, List<string>> Results, IPkb pkb);
     }
 }

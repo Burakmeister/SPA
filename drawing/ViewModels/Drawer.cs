@@ -73,11 +73,16 @@ namespace SPA.ViewModels
             {
                 string query = _codeQuery;
                 _processor = new QueryProcessorExec(query, pkb);
-                List<string> results = _processor.Query.Result;
-                ResultQuery = "";
-                foreach (string result in results)
+                Dictionary<string, List<string>> results = _processor.Query.Result;
+
+                Dictionary<string, List<string>>.ValueCollection values = results.Values;
+              ResultQuery = "";
+                foreach (List<string> list in  values)
                 {
-                    ResultQuery += result + ' ';
+                    foreach (string result in list)
+                    {
+                        ResultQuery += result + ' ';
+                    }                    
                 }
                 OnPropertyChanged(nameof(ResultQuery));
                 MessageBox.Show("Query executed");

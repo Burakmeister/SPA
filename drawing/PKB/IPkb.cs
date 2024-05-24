@@ -12,9 +12,13 @@ namespace SPA.PKB
     {
         void SetFollows(Statement firstStatement, Statement nextStatement);
 
-        List<int> GetFollowed(int statementNumber);
+        int GetFollowed(int statementNumber);
 
-        List<int> GetFollows(int statementNumber);
+        int GetFollows(int statementNumber);
+
+        List<int> GetAllFollowed();
+
+        List<int> GetAllFollows();
 
         bool IsFollowed(int statementNumber, int nextStatement);
 
@@ -39,6 +43,10 @@ namespace SPA.PKB
         List<int> GetChildren(int parentStatement);
 
         int GetParent(int childStatement);
+
+        List<int> GetAllChildren();
+
+        List<int> GetAllParents();
 
         bool IsParent(int parentStatement, int childStatement);
 

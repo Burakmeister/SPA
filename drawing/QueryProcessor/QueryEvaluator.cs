@@ -76,7 +76,7 @@ namespace SPA.QueryProcessor
             if(query.SuchThatClause!=null)
                 Relation = query.SuchThatClause.Relation;
             With = query.WithClause;
-            synonym = query.Synonym;
+            synonym = query.Synonyms[0];
             Dictionary<string, string> declarationsMap = getDeclarations(query);
             query.Result = ExecuteQuery(declarationsMap);
         }
@@ -97,31 +97,49 @@ namespace SPA.QueryProcessor
         }
 
         // sprawdzam czy to przypadek z relacją, z with itd.
-        private List<string> ExecuteQuery(Dictionary<string, string> declarationsMap)
+        private Dictionary<string,List<string>> ExecuteQuery(Dictionary<string, string> declarationsMap)
         {
             string? varTypeStr;
             varTypeStr = declarationsMap[synonym];
             VarType varType = VarType.GetVarType(varTypeStr);
-            if (Relation == null && With == null)
+
+            Dictionary<string, List<string>> results = new Dictionary<string, List<string>>();
+
+            foreach (var declaration in declarationsMap.Keys.ToArray())
             {
-                return Select(varType);
+                results.Add(declaration, new List<string>());
             }
-            else if (With == null)
+
+            if (Relation != null)
             {
-                return SelectRelation(varType, Relation!);
+                return SelectRelation(varType, Relation!, results);
             }
-            else if (Relation == null)
+
+            if (With != null)
             {
-                return SelectWith(varType);
+                
             }
-            else
-            {
-                return SelectRelationWith(varType);
-            }
+
+            //if (Relation == null && With == null)
+            //{
+            //    return Select(varType);
+            //}
+            //else if (With == null)
+            //{
+            //    return SelectRelation(varType, Relation!);
+            //}
+            //else if (Relation == null)
+            //{
+            //    return SelectWith(varType);
+            //}
+            //else
+            //{
+            //    return SelectRelationWith(varType);
+            //}
             throw new Exception("Coś poszło bardzo nie tak (QueryEvaluator.ExecuteQuery())!");
         }
 
-        // najprostszy przypadek bez relaji i bez with
+        // najprostszy przypadek bez relacji i bez with
         private List<string> Select(VarType varType)
         { 
             int programLength = Pkb.GetProgramLength();
@@ -138,163 +156,108 @@ namespace SPA.QueryProcessor
         }
 
         // przypadek z relacją bez with
-        private List<string> SelectRelation(VarType varType, Relation relation)
+        private Dictionary<string, List<string>> SelectRelation(VarType varType, Relation relation, Dictionary<string, List<string>> results)
         {
             return relation switch
             {
-                var type when type is Follows => FollowsRelation((type as Follows)!, varType),
-                var type when type is FollowsT => FollowsTRelation((type as FollowsT)!),
-                var type when type is Parent => ParentRelation((type as Parent)!, varType),
-                var type when type is ParentT => ParentTRelation((type as ParentT)!),
-                var type when type is ModifiesS => ModifiesSRelation((type as ModifiesS)!),
-                var type when type is UsesS => UsesSRelation((type as UsesS)!, varType),
+                var type when type is Follows => FollowsRelation((type as Follows)!, varType, results),
+                //var type when type is FollowsT => FollowsTRelation((type as FollowsT)!),
+                var type when type is Parent => ParentRelation((type as Parent)!, varType, results),
+                //var type when type is ParentT => ParentTRelation((type as ParentT)!),
+                //var type when type is ModifiesS => ModifiesSRelation((type as ModifiesS)!),
+                //var type when type is UsesS => UsesSRelation((type as UsesS)!, varType),
                 _ => throw new Exception("Nieprawidłowa relacja!"),
             };
         }
 
         // relacja follow (chyba działa)
-        private List<string> FollowsRelation(Follows follows, VarType varType)
+        private Dictionary<string, List<string>> FollowsRelation(Follows follows, VarType varType, Dictionary<string, List<string>> results)
         {
-            string stmtRef1 = follows.StmtRef.Value;
-            string stmtRef2 = follows.StmtRef2.Value;
+            string leftRef = follows.leftStmtRef.Value;
+            string rightRef = follows.rightStmtRef.Value;
 
             List<int> lines = GetStatementLines(varType);
+            // tworze liste synonimow
+            string[] keys = results.Keys.ToArray();
 
-            if (stmtRef1 == "_" && stmtRef2 == "_")
-            {
-                List<string> retList = new();
-                int programLength = Pkb.GetProgramLength();
-                for (int i = 1; i < programLength; i++)
-                {
-                    foreach (int line in Pkb.GetFollows(i))
-                    {
-                        retList.Add("(" + i.ToString() + ", " + line.ToString() + ") ");
-                    }
-                }
-                return retList;
-            }
-            else if (stmtRef1 == "_")
-            {
-                List<string> retList = new();
-                int secondRef;
-                int.TryParse(stmtRef2, out secondRef);
-                if (secondRef == 0)
-                {
-                    List<int> followsList = GetAllFollows();
-                    return followsList.Intersect(lines).ToList().ConvertAll<string>(x => x.ToString());
-                }
-                else
-                {
-                    List<int> tmpFollows = Pkb.GetFollows(secondRef);
-                    if (tmpFollows.Count > 0)
-                    {
-                        return tmpFollows.ConvertAll<string>(x => x.ToString());
-                    }
-                    return new List<string>();
-                }
-            }
-            else if (stmtRef2 == "_")
-            {
-                List<string> retList = new();
-                int secondRef;
-                int.TryParse(stmtRef2, out secondRef);
-                if (secondRef == 0)
-                {
-                    List<int> followedList = GetAllFollowed();
-                    return followedList.Intersect(lines).ToList().ConvertAll<string>(x => x.ToString());
-                }
-                else
-                {
-                    List<int> tmpFollowed = Pkb.GetFollowed(secondRef);
-                    if (tmpFollowed.Count > 0)
-                    {
-                        return tmpFollowed.ConvertAll<string>(x => x.ToString());
-                    }
-                    return new List<string>();
-                }
-            }
-            else
-            {
-                int firstRef;
-                int secondRef;
-                int.TryParse(stmtRef1, out firstRef);
-                int.TryParse(stmtRef2, out secondRef);
+            int leftStmtNumber;
+            int rightStmtNumber;
 
-                if(firstRef == 0 && secondRef == 0)
+            if (leftRef == "_" && rightRef == "_")
+            {
+                // to sprawdza tylko cos sensowengo jak jest boolean w zapytaniu
+            }
+            else if (keys.Contains(leftRef) && rightRef == "_")
+            {
+                List<int> stmtInt = Pkb.GetAllFollowed();
+                List<string> stmtString = stmtInt.ConvertAll<string>(x => x.ToString());
+                results[leftRef].AddRange(stmtString);
+            }
+            else if (leftRef == "_" && keys.Contains(rightRef))
+            {
+                List<int> stmtInt = Pkb.GetAllFollows();
+                List<string> stmtString = stmtInt.ConvertAll<string>(x => x.ToString());
+                results[rightRef].AddRange(stmtString);
+            }
+            else if (keys.Contains(leftRef) && keys.Contains(rightRef))
+            {
+                List<int> stmtInt = Pkb.GetAllFollowed();
+                foreach (int stmtNumber in stmtInt)
                 {
-                    List<string> retList = new();
-                    int programLength = Pkb.GetProgramLength();
-                    for (int i=1; i<programLength; i++)
-                    {
-                        foreach(int line in Pkb.GetFollows(i))
-                        {
-                            retList.Add("("+line.ToString()+", " + i.ToString() + ") ");
-                        }
-                    }
-                    return retList;
-                }
-                else if (firstRef == 0)
-                {
-                    return Pkb.GetFollows(secondRef).ConvertAll<string>(x => x.ToString());
-                }
-                else if (secondRef == 0)
-                {
-                    return Pkb.GetFollowed(firstRef).ConvertAll<string>(x => x.ToString());
-                }
-                else
-                {
-                    bool isFollowed = Pkb.IsFollowed(firstRef, secondRef);
-                    return new List<string>(new string[]{isFollowed.ToString()});
+                    int followingStmt = Pkb.GetFollowed(stmtNumber);
+                    results[leftRef].Add(stmtNumber.ToString());
+                    results[rightRef].Add(followingStmt.ToString());
                 }
             }
+            else if (keys.Contains(leftRef) && int.TryParse(rightRef, out rightStmtNumber))
+            {
+                results[leftRef].Add(Pkb.GetFollows(rightStmtNumber).ToString());
+            }
+            else if (int.TryParse(leftRef, out leftStmtNumber) && keys.Contains(rightRef))
+            {
+                if (Pkb.GetFollowed(leftStmtNumber) != -1)
+                {
+                    results[rightRef].Add(Pkb.GetFollowed(leftStmtNumber).ToString());
+                }
+            }
+            else if (int.TryParse(leftRef, out leftStmtNumber) && int.TryParse(rightRef, out rightStmtNumber))
+            {
+                // to sprawdza tylko cos sensowengo jak jest boolean w zapytaniu
+            }
+            else if (int.TryParse(leftRef, out leftStmtNumber) && rightRef == "_")
+            {
+                // to sprawdza tylko cos sensowengo jak jest boolean w zapytaniu
+            }
+            else if (leftRef == "_" && int.TryParse(rightRef, out rightStmtNumber))
+            {
+                // to sprawdza tylko cos sensowengo jak jest boolean w zapytaniu 
+            }
+            return results;
         }
 
-        private List<int> GetAllFollows() 
-        {
-            int linesNumber = Pkb.GetProgramLength();
-            List<int> toRet = new();
-            for(int i=1; i<linesNumber; i++)
-            {
-                if(Pkb.GetFollows(i).Count>0)
-                    toRet.Add(Pkb.GetFollows(i)[0]);
-            }
-            return toRet;
-        }
+        //private List<int> GetAllParents()
+        //{
+        //    int linesNumber = Pkb.GetProgramLength();
+        //    List<int> toRet = new();
+        //    for (int i = 1; i < linesNumber; i++)
+        //    {
+        //        if (Pkb.GetParent(i) != 0)
+        //            toRet.Add(Pkb.GetParent(i));
+        //    }
+        //    return toRet;
+        //}
 
-        private List<int> GetAllParents()
-        {
-            int linesNumber = Pkb.GetProgramLength();
-            List<int> toRet = new();
-            for (int i = 1; i < linesNumber; i++)
-            {
-                if (Pkb.GetParent(i) != 0)
-                    toRet.Add(Pkb.GetParent(i));
-            }
-            return toRet;
-        }
-
-        private List<int> GetAllChildren()
-        {
-            int linesNumber = Pkb.GetProgramLength();
-            List<int> toRet = new();
-            for (int i = 1; i < linesNumber; i++)
-            {
-                if (Pkb.GetChildren(i).Count > 0)
-                    toRet.Add(Pkb.GetChildren(i)[0]);
-            }
-            return toRet;
-        }
-
-        private List<int> GetAllFollowed() {
-            int linesNumber = Pkb.GetProgramLength();
-            List<int> toRet = new();
-            for (int i = 1; i < linesNumber; i++)
-            {
-                if (Pkb.GetFollowed(i).Count > 0)
-                    toRet.Add(Pkb.GetFollowed(i)[0]);
-            }
-            return toRet;
-        }
+        //private List<int> GetAllChildren()
+        //{
+        //    int linesNumber = Pkb.GetProgramLength();
+        //    List<int> toRet = new();
+        //    for (int i = 1; i < linesNumber; i++)
+        //    {
+        //        if (Pkb.GetChildren(i).Count > 0)
+        //            toRet.Add(Pkb.GetChildren(i)[0]);
+        //    }
+        //    return toRet;
+        //}
 
         private List<string> UsesSRelation(UsesS usesS, VarType varType)
         {
@@ -394,97 +357,114 @@ namespace SPA.QueryProcessor
         }
 
         // prawie działa
-        private List<string> ParentRelation(Parent parent, VarType varType)
+        private Dictionary<string, List<string>> ParentRelation(Parent parent, VarType varType, Dictionary<string, List<string>> results)
         {
-            string stmtRef1 = parent.StmtRef.Value;
-            string stmtRef2 = parent.StmtRef2.Value;
+            string parentRef = parent.StmtRef.Value;
+            string childRef = parent.StmtRef2.Value;
 
             List<int> lines = GetStatementLines(varType);
 
-            if (stmtRef1 == "_" && stmtRef2 == "_")
-            {
-                List<string> retList = new();
-                int programLength = Pkb.GetProgramLength();
-                for (int i = 1; i < programLength; i++)
-                {
-                    retList.Add("(" + i.ToString() + ", " + Pkb.GetParent(i).ToString() + ") ");
-                }
-                return retList;
-            }
-            else if (stmtRef1 == "_")
-            {
-                List<string> retList = new();
-                int secondRef;
-                int.TryParse(stmtRef2, out secondRef);
-                if (secondRef == 0)
-                {
-                    List<int> childrenList = GetAllChildren();
-                    return childrenList.Intersect(lines).ToList().ConvertAll<string>(x => x.ToString());
-                }
-                else
-                {
-                    List<int> childrenList = Pkb.GetChildren(secondRef);
-                    if (childrenList.Count > 0)
-                    {
-                        return childrenList.ConvertAll<string>(x => x.ToString());
-                    }
-                    return new List<string>();
-                }
-            }
-            else if (stmtRef2 == "_")
-            {
-                List<string> retList = new();
-                int secondRef;
-                int.TryParse(stmtRef2, out secondRef);
-                if (secondRef == 0)
-                {
-                    List<int> parentsList = GetAllParents();
-                    return parentsList.Intersect(lines).ToList().ConvertAll<string>(x => x.ToString());
-                }
-                else
-                {
-                    int tmpFollowed = Pkb.GetParent(secondRef);
-                    if (tmpFollowed != 0)
-                    {
-                        return new List<string> (new string[] { tmpFollowed.ToString() });
-                    }
-                    return new List<string>();
-                }
-            }
-            else
-            {
-                int firstRef;
-                int secondRef;
-                int.TryParse(stmtRef1, out firstRef);
-                int.TryParse(stmtRef2, out secondRef);
+            string[] keys = results.Keys.ToArray();
 
-                if (firstRef == 0 && secondRef == 0)
-                {
-                    List<string> retList = new();
-                    int programLength = Pkb.GetProgramLength();
-                    for (int i = 1; i < programLength; i++)
-                    {
-                        foreach (int line in Pkb.GetChildren(i))
-                        {
-                            retList.Add("(" + line.ToString() + ", " + i.ToString() + ") ");
-                        }
-                    }
-                    return retList;
-                }
-                else if (firstRef == 0)
-                {
-                    return Pkb.GetChildren(secondRef).ConvertAll<string>(x => x.ToString());
-                }
-                else if (secondRef == 0)
-                {
-                    return Pkb.GetChildren(firstRef).ConvertAll<string>(x => x.ToString());
-                }
-                else
-                {
-                    bool isFollowed = Pkb.IsParent(firstRef, secondRef);
-                    return new List<string>(new string[] { isFollowed.ToString() });
-                }
+            if (parentRef == "_" && childRef == "_")
+            {
+                // to sprawdza tylko cos sensowengo jak jest boolean w zapytaniu 
             }
+            else if (keys.Contains(parentRef) && childRef == "_")
+            {
+                //List<int> stmtInt = Pkb.GetAllFollowed();
+                //List<string> stmtString = stmtInt.ConvertAll<string>(x => x.ToString());
+                //results[leftRef].AddRange(stmtString);
+                List<int> parentsInts = Pkb.GetAllParents();
+                List<string> parentStrings = parentsInts.ConvertAll<string>(x => x.ToString());
+                results[parentRef].AddRange(parentStrings);
+            }
+            return results;
+
+            //if (stmtRef1 == "_" && stmtRef2 == "_")
+            //{
+            //    List<string> retList = new();
+            //    int programLength = Pkb.GetProgramLength();
+            //    for (int i = 1; i < programLength; i++)
+            //    {
+            //        retList.Add("(" + i.ToString() + ", " + Pkb.GetParent(i).ToString() + ") ");
+            //    }
+            //    return retList;
+            //}
+            //else if (stmtRef1 == "_")
+            //{
+            //    List<string> retList = new();
+            //    int secondRef;
+            //    int.TryParse(stmtRef2, out secondRef);
+            //    if (secondRef == 0)
+            //    {
+            //        List<int> childrenList = GetAllChildren();
+            //        return childrenList.Intersect(lines).ToList().ConvertAll<string>(x => x.ToString());
+            //    }
+            //    else
+            //    {
+            //        List<int> childrenList = Pkb.GetChildren(secondRef);
+            //        if (childrenList.Count > 0)
+            //        {
+            //            return childrenList.ConvertAll<string>(x => x.ToString());
+            //        }
+            //        return new List<string>();
+            //    }
+            //}
+            //else if (stmtRef2 == "_")
+            //{
+            //    List<string> retList = new();
+            //    int secondRef;
+            //    int.TryParse(stmtRef2, out secondRef);
+            //    if (secondRef == 0)
+            //    {
+            //        List<int> parentsList = GetAllParents();
+            //        return parentsList.Intersect(lines).ToList().ConvertAll<string>(x => x.ToString());
+            //    }
+            //    else
+            //    {
+            //        int tmpFollowed = Pkb.GetParent(secondRef);
+            //        if (tmpFollowed != 0)
+            //        {
+            //            return new List<string> (new string[] { tmpFollowed.ToString() });
+            //        }
+            //        return new List<string>();
+            //    }
+            //}
+            //else
+            //{
+            //    int firstRef;
+            //    int secondRef;
+            //    int.TryParse(stmtRef1, out firstRef);
+            //    int.TryParse(stmtRef2, out secondRef);
+
+            //    if (firstRef == 0 && secondRef == 0)
+            //    {
+            //        List<string> retList = new();
+            //        int programLength = Pkb.GetProgramLength();
+            //        for (int i = 1; i < programLength; i++)
+            //        {
+            //            foreach (int line in Pkb.GetChildren(i))
+            //            {
+            //                retList.Add("(" + line.ToString() + ", " + i.ToString() + ") ");
+            //            }
+            //        }
+            //        return retList;
+            //    }
+            //    else if (firstRef == 0)
+            //    {
+            //        return Pkb.GetChildren(secondRef).ConvertAll<string>(x => x.ToString());
+            //    }
+            //    else if (secondRef == 0)
+            //    {
+            //        return Pkb.GetChildren(firstRef).ConvertAll<string>(x => x.ToString());
+            //    }
+            //    else
+            //    {
+            //        bool isFollowed = Pkb.IsParent(firstRef, secondRef);
+            //        return new List<string>(new string[] { isFollowed.ToString() });
+            //    }
+            //}
         }
 
         private List<string> FollowsTRelation(FollowsT followsT)
