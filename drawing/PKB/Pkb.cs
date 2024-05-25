@@ -145,16 +145,15 @@ namespace SPA.PKB
                 modifies[statement].Add(GetVariableIndex(variable));
         }
 
-        public List<Variable> GetModified(int statementNumber)
+        public List<string> GetModified(int statementNumber)
         {
             List<int> modifiedVariables = modifies[statementNumber];
-            List<Variable> variables = new List<Variable>();
+            List<string> variables = new List<string>();
 
             foreach (int index in modifiedVariables)
             {
                 string variableName = (string)this.variables[index];
-                Variable var = new Variable(variableName, 0);
-                variables.Add(var);
+                variables.Add(variableName);
             }
             return variables;
         }
@@ -166,6 +165,19 @@ namespace SPA.PKB
             for (int i = 0; i < modifies.Length; i++)
             {
                 if (modifies[i].Contains(varIndex))
+                {
+                    statements.Add(i);
+                }
+            }
+            return statements;
+        }
+
+        public List<int> GetAllStatementsThatModifieVariables()
+        {
+            List<int> statements = new List<int>();
+            for (int i = 0; i < uses.Length; i++)
+            {
+                if (modifies[i].Count > 0)
                 {
                     statements.Add(i);
                 }
@@ -188,16 +200,15 @@ namespace SPA.PKB
                 uses[statement].Add(GetVariableIndex(variable));
         }
 
-        public List<Variable> GetUsed(int statement)
+        public List<string> GetUsed(int statement)
         {
             List<int> usedVariables = uses[statement];
-            List<Variable> variables = new List<Variable>();
+            List<string> variables = new List<string>();
 
             foreach (int index in usedVariables)
             {
                 string variableName = (string)this.variables[index];
-                Variable var = new Variable(variableName, 0);
-                variables.Add(var);
+                variables.Add(variableName);
             }
             return variables;
         }
@@ -209,6 +220,19 @@ namespace SPA.PKB
             for (int i = 0; i < uses.Length; i++)
             {
                 if (uses[i].Contains(varIndex))
+                {
+                    statements.Add(i);
+                }
+            }
+            return statements;
+        }
+
+        public List<int> GetAllStatementsThatUseVariables()
+        {
+            List<int> statements = new List<int>();
+            for (int i = 0; i < uses.Length; i++)
+            {
+                if (uses[i].Count > 0)
                 {
                     statements.Add(i);
                 }

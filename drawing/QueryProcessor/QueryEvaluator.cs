@@ -69,6 +69,7 @@ namespace SPA.QueryProcessor
         private Relation? Relation;
         private string synonym;
         private With? With;
+        private Dictionary<string, string> declarationsMap;
 
         public QueryEvaluator(Query query, IPkb pkb) 
         {
@@ -77,8 +78,8 @@ namespace SPA.QueryProcessor
                 Relation = query.SuchThatClause.Relation;
             With = query.WithClause;
             synonym = query.Synonyms[0];
-            Dictionary<string, string> declarationsMap = getDeclarations(query);
-            query.Result = ExecuteQuery(declarationsMap);
+            declarationsMap = getDeclarations(query);
+            query.Result = ExecuteQuery();
         }
 
         // robię słownik deklaracji jako klucze z ich nazwami i jako wartości typami
@@ -97,12 +98,8 @@ namespace SPA.QueryProcessor
         }
 
         // sprawdzam czy to przypadek z relacją, z with itd.
-        private Dictionary<string,List<string>> ExecuteQuery(Dictionary<string, string> declarationsMap)
+        private Dictionary<string,List<string>> ExecuteQuery()
         {
-            string? varTypeStr;
-            varTypeStr = declarationsMap[synonym];
-            VarType varType = VarType.GetVarType(varTypeStr);
-
             Dictionary<string, List<string>> results = new Dictionary<string, List<string>>();
 
             foreach (var declaration in declarationsMap.Keys.ToArray())
@@ -112,7 +109,7 @@ namespace SPA.QueryProcessor
 
             if (Relation != null)
             {
-                return SelectRelation(varType, Relation!, results);
+                return SelectRelation(Relation!, results);
             }
 
             if (With != null)
@@ -156,27 +153,24 @@ namespace SPA.QueryProcessor
         }
 
         // przypadek z relacją bez with
-        private Dictionary<string, List<string>> SelectRelation(VarType varType, Relation relation, Dictionary<string, List<string>> results)
+        private Dictionary<string, List<string>> SelectRelation(Relation relation, Dictionary<string, List<string>> results)
         {
             return relation switch
             {
-                var type when type is Follows => FollowsRelation((type as Follows)!, varType, results),
+                var type when type is Follows => FollowsRelation((type as Follows)!, results),
                 //var type when type is FollowsT => FollowsTRelation((type as FollowsT)!),
-                var type when type is Parent => ParentRelation((type as Parent)!, varType, results),
+                var type when type is Parent => ParentRelation((type as Parent)!, results),
                 //var type when type is ParentT => ParentTRelation((type as ParentT)!),
-                //var type when type is ModifiesS => ModifiesSRelation((type as ModifiesS)!),
-                var type when type is UsesS => UsesSRelation((type as UsesS)!, varType, results),
+                var type when type is ModifiesS => ModifiesSRelation((type as ModifiesS)!, results),
+                var type when type is UsesS => UsesSRelation((type as UsesS)!, results),
                 _ => throw new Exception("Nieprawidłowa relacja!"),
             };
         }
 
-        // relacja follow (chyba działa)
-        private Dictionary<string, List<string>> FollowsRelation(Follows follows, VarType varType, Dictionary<string, List<string>> results)
+        private Dictionary<string, List<string>> FollowsRelation(Follows follows, Dictionary<string, List<string>> results)
         {
             string leftRef = follows.leftStmtRef.Value;
             string rightRef = follows.rightStmtRef.Value;
-
-            List<int> lines = GetStatementLines(varType);
             // tworze liste synonimow
             string[] keys = results.Keys.ToArray();
 
@@ -190,34 +184,60 @@ namespace SPA.QueryProcessor
             else if (keys.Contains(leftRef) && rightRef == "_")
             {
                 List<int> stmtInt = Pkb.GetAllFollowed();
-                List<string> stmtString = stmtInt.ConvertAll<string>(x => x.ToString());
-                results[leftRef].AddRange(stmtString);
+                stmtInt = IntersectByproductWithEntityList(leftRef,stmtInt);
+                if (stmtInt.Count > 0)
+                {
+                    List<string> stmtString = stmtInt.ConvertAll<string>(x => x.ToString());
+                    results[leftRef].AddRange(stmtString);
+                }               
             }
             else if (leftRef == "_" && keys.Contains(rightRef))
             {
                 List<int> stmtInt = Pkb.GetAllFollows();
-                List<string> stmtString = stmtInt.ConvertAll<string>(x => x.ToString());
-                results[rightRef].AddRange(stmtString);
+                stmtInt = IntersectByproductWithEntityList(rightRef, stmtInt);
+                if (stmtInt.Count > 0)
+                {
+                    List<string> stmtString = stmtInt.ConvertAll<string>(x => x.ToString());
+                    results[rightRef].AddRange(stmtString);
+                }
             }
             else if (keys.Contains(leftRef) && keys.Contains(rightRef))
             {
                 List<int> stmtInt = Pkb.GetAllFollowed();
-                foreach (int stmtNumber in stmtInt)
+                stmtInt = IntersectByproductWithEntityList(leftRef, stmtInt);
+                if (stmtInt.Count > 0)
                 {
-                    int followingStmt = Pkb.GetFollowed(stmtNumber);
-                    results[leftRef].Add(stmtNumber.ToString());
-                    results[rightRef].Add(followingStmt.ToString());
+                    foreach (int stmtNumber in stmtInt)
+                    {
+                        List<int> followingStmt = new List<int> { Pkb.GetFollowed(stmtNumber) };
+                        followingStmt = IntersectByproductWithEntityList(rightRef, followingStmt);
+                        if (followingStmt.Count > 0)
+                        {
+                            results[leftRef].Add(stmtNumber.ToString());
+                            results[rightRef].Add(followingStmt.First().ToString());
+                        }
+                    }
                 }
             }
             else if (keys.Contains(leftRef) && int.TryParse(rightRef, out rightStmtNumber))
             {
-                results[leftRef].Add(Pkb.GetFollows(rightStmtNumber).ToString());
+                List<int> stmtInt = new List<int> { Pkb.GetFollowed(rightStmtNumber) };
+                stmtInt = IntersectByproductWithEntityList(leftRef, stmtInt);
+                if (stmtInt.Count > 0)
+                {
+                    results[leftRef].Add(stmtInt.First().ToString());
+                }
             }
             else if (int.TryParse(leftRef, out leftStmtNumber) && keys.Contains(rightRef))
             {
                 if (Pkb.GetFollowed(leftStmtNumber) != -1)
                 {
-                    results[rightRef].Add(Pkb.GetFollowed(leftStmtNumber).ToString());
+                    List<int> stmtInt = new List<int> { Pkb.GetFollowed(leftStmtNumber) };
+                    if (stmtInt.Count > 0)
+                    {
+                        stmtInt = IntersectByproductWithEntityList(leftRef, stmtInt);
+                        results[rightRef].Add(stmtInt.First().ToString());
+                    }
                 }
             }
             else if (int.TryParse(leftRef, out leftStmtNumber) && int.TryParse(rightRef, out rightStmtNumber))
@@ -235,12 +255,10 @@ namespace SPA.QueryProcessor
             return results;
         }
 
-        private Dictionary<string, List<string>> UsesSRelation(UsesS usesS, VarType varType, Dictionary<string, List<string>> results)
+        private Dictionary<string, List<string>> UsesSRelation(UsesS usesS, Dictionary<string, List<string>> results)
         {
             string stmtRef = usesS.StmtRef.Value;
             string entRef = usesS.EntRef.Value;
-
-            List<int> lines = GetStatementLines(varType);
 
             string[] keys = results.Keys.ToArray();
 
@@ -249,15 +267,138 @@ namespace SPA.QueryProcessor
 
             if (keys.Contains(stmtRef) && keys.Contains(entRef))
             {
-                
+                List<int> statements = Pkb.GetAllStatementsThatUseVariables();
+                statements = IntersectByproductWithEntityList(stmtRef, statements);
+                if (statements.Count > 0)
+                {
+                    foreach (int stmtNumber in statements)
+                    {
+                        List<string> usedVariables = Pkb.GetUsed(stmtNumber);
+                        usedVariables = IntersectByproductWithEntityList(entRef,usedVariables);
+                        if (usedVariables.Count > 0)
+                        {
+                            foreach (string variable in usedVariables)
+                            {
+                                results[stmtRef].Add(stmtNumber.ToString());
+                                results[entRef].Add(variable);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (keys.Contains(stmtRef) && entRef == "_")
+            {
+                List<int> statements = Pkb.GetAllStatementsThatUseVariables();
+                statements = IntersectByproductWithEntityList(stmtRef, statements);
+                if (statements.Count > 0)
+                {
+                    List<string> stmtString = statements.ConvertAll<string>(x => x.ToString());
+                    results[stmtRef].AddRange(stmtString);
+                }
+            }
+            else if (keys.Contains(stmtRef) && entRef.StartsWith("\""))
+            {
+                string variable = entRef.Substring(1,entRef.Length-2);
+                List<int> statements = Pkb.GetUses(variable);
+                statements = IntersectByproductWithEntityList(stmtRef, statements);
+                if (statements.Count > 0)
+                {
+                    List<string> stmtString = statements.ConvertAll<string>(x => x.ToString());
+                    results[stmtRef].AddRange(stmtString);
+                }
+            }
+            else if (int.TryParse(stmtRef, out stmt) && keys.Contains(entRef))
+            {
+                List<string> variables = Pkb.GetUsed(stmt);
+                variables = IntersectByproductWithEntityList(entRef, variables);
+                if (variables.Count > 0)
+                {
+                    results[entRef].AddRange(variables);
+                }
+            }
+            else if (int.TryParse(stmtRef, out stmt) && entRef.StartsWith("\""))
+            {
+                // to sprawdza tylko cos sensowengo jak jest boolean w zapytaniu 
+            }
+            else if (int.TryParse(stmtRef, out stmt) && entRef == "_")
+            {
+                // to sprawdza tylko cos sensowengo jak jest boolean w zapytaniu 
             }
 
             return results;
         }
 
-        private List<string> ModifiesSRelation(ModifiesS modifiesS)
+        private Dictionary<string, List<string>> ModifiesSRelation(ModifiesS modifiesS, Dictionary<string, List<string>> results)
         {
-            throw new NotImplementedException();
+            string stmtRef = modifiesS.StmtRef.Value;
+            string entRef = modifiesS.EntRef.Value;
+
+            string[] keys = results.Keys.ToArray();
+
+            int stmt;
+            int ent;
+
+            if (keys.Contains(stmtRef) && keys.Contains(entRef))
+            {
+                List<int> statements = Pkb.GetAllStatementsThatModifieVariables();
+                statements = IntersectByproductWithEntityList(stmtRef, statements);
+                if (statements.Count > 0)
+                {
+                    foreach (int stmtNumber in statements)
+                    {
+                        List<string> modifiedVariables = Pkb.GetModified(stmtNumber);
+                        modifiedVariables = IntersectByproductWithEntityList(entRef, modifiedVariables);
+                        if (modifiedVariables.Count > 0)
+                        {
+                            foreach (string variable in modifiedVariables)
+                            {
+                                results[stmtRef].Add(stmtNumber.ToString());
+                                results[entRef].Add(variable);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (keys.Contains(stmtRef) && entRef == "_")
+            {
+                List<int> statements = Pkb.GetAllStatementsThatModifieVariables();
+                statements = IntersectByproductWithEntityList(stmtRef, statements);
+                if (statements.Count > 0)
+                {
+                    List<string> stmtString = statements.ConvertAll<string>(x => x.ToString());
+                    results[stmtRef].AddRange(stmtString);
+                }
+            }
+            else if (keys.Contains(stmtRef) && entRef.StartsWith("\""))
+            {
+                string variable = entRef.Substring(1, entRef.Length - 2);
+                List<int> statements = Pkb.GetModifies(variable);
+                statements = IntersectByproductWithEntityList(stmtRef, statements);
+                if (statements.Count > 0)
+                {
+                    List<string> stmtString = statements.ConvertAll<string>(x => x.ToString());
+                    results[stmtRef].AddRange(stmtString);
+                }
+            }
+            else if (int.TryParse(stmtRef, out stmt) && keys.Contains(entRef))
+            {
+                List<string> variables = Pkb.GetModified(stmt);
+                variables = IntersectByproductWithEntityList(entRef, variables);
+                if (variables.Count > 0)
+                {
+                    results[entRef].AddRange(variables);
+                }
+            }
+            else if (int.TryParse(stmtRef, out stmt) && entRef.StartsWith("\""))
+            {
+                // to sprawdza tylko cos sensowengo jak jest boolean w zapytaniu 
+            }
+            else if (int.TryParse(stmtRef, out stmt) && entRef == "_")
+            {
+                // to sprawdza tylko cos sensowengo jak jest boolean w zapytaniu 
+            }
+
+            return results;
         }
 
         private List<string> ParentTRelation(ParentT parentT)
@@ -266,12 +407,10 @@ namespace SPA.QueryProcessor
         }
 
         // prawie działa
-        private Dictionary<string, List<string>> ParentRelation(Parent parent, VarType varType, Dictionary<string, List<string>> results)
+        private Dictionary<string, List<string>> ParentRelation(Parent parent, Dictionary<string, List<string>> results)
         {
             string parentRef = parent.StmtRef.Value;
             string childRef = parent.StmtRef2.Value;
-
-            List<int> lines = GetStatementLines(varType);
 
             string[] keys = results.Keys.ToArray();
 
@@ -285,25 +424,40 @@ namespace SPA.QueryProcessor
             else if (keys.Contains(parentRef) && childRef == "_")
             {
                 List<int> parentsInts = Pkb.GetAllParents();
-                List<string> parentStrings = parentsInts.ConvertAll<string>(x => x.ToString());
-                results[parentRef].AddRange(parentStrings);
+                parentsInts = IntersectByproductWithEntityList(parentRef, parentsInts);
+                if (parentsInts.Count > 0)
+                {
+                    List<string> parentStrings = parentsInts.ConvertAll<string>(x => x.ToString());
+                    results[parentRef].AddRange(parentStrings);
+                }
             }
             else if (parentRef == "_" && keys.Contains(childRef))
             {
                 List<int> childrenInts = Pkb.GetAllChildren();
-                List<string> childrenStrings = childrenInts.ConvertAll<string>(x => x.ToString());
-                results[childRef].AddRange(childrenStrings);
+                childrenInts = IntersectByproductWithEntityList(childRef, childrenInts);
+                if (childrenInts.Count > 0) { 
+                    List<string> childrenStrings = childrenInts.ConvertAll<string>(x => x.ToString());
+                    results[childRef].AddRange(childrenStrings);
+                }
             }
             else if (keys.Contains(parentRef) && keys.Contains(childRef))
             {
                 List<int> parents = Pkb.GetAllParents();
-                foreach (int parentStmt in parents)
+                parents = IntersectByproductWithEntityList(parentRef,parents);
+                if (parents.Count > 0)
                 {
-                    List<int> children = Pkb.GetChildren(parentStmt);
-                    foreach (int childstmt in children)
+                    foreach (int parentStmt in parents)
                     {
-                        results[childRef].Add(childstmt.ToString());
-                        results[parentRef].Add(parentStmt.ToString());
+                        List<int> children = Pkb.GetChildren(parentStmt);
+                        children = IntersectByproductWithEntityList(childRef,children);
+                        if (children.Count > 0)
+                        {
+                            foreach (int childstmt in children)
+                            {
+                                results[childRef].Add(childstmt.ToString());
+                                results[parentRef].Add(parentStmt.ToString());
+                            }
+                        }
                     }
                 }
             }
@@ -311,7 +465,12 @@ namespace SPA.QueryProcessor
             {
                 if (Pkb.GetParent(childStmtNumber) != -1)
                 {
-                    results[parentRef].Add(Pkb.GetParent(childStmtNumber).ToString());
+                    List<int> parentInts = new List<int> { Pkb.GetParent(childStmtNumber) };
+                    parentInts = IntersectByproductWithEntityList(parentRef, parentInts);
+                    if (parentInts.Count > 0)
+                    {
+                        results[parentRef].Add(Pkb.GetParent(childStmtNumber).ToString());
+                    }
                 }
             }
             else if (int.TryParse(parentRef, out parentStmtNumber) && keys.Contains(childRef))
@@ -319,8 +478,11 @@ namespace SPA.QueryProcessor
                 if (Pkb.GetChildren(parentStmtNumber).Count > 0)
                 {
                     List<int> childrenInts = Pkb.GetChildren(parentStmtNumber);
-                    List<string> childrenStrings = childrenInts.ConvertAll<string>(x => x.ToString());
-                    results[childRef].AddRange(childrenStrings);
+                    childrenInts = IntersectByproductWithEntityList(childRef, childrenInts);
+                    if (childrenInts.Count > 0) { 
+                        List<string> childrenStrings = childrenInts.ConvertAll<string>(x => x.ToString());
+                        results[childRef].AddRange(childrenStrings);
+                    }
                 }               
             }
             else if (parentRef == "_" && int.TryParse(childRef, out childStmtNumber))
@@ -349,23 +511,44 @@ namespace SPA.QueryProcessor
             throw new Exception("With not implemented yet!");
         }
 
-        // przypadek z relacją i z with
-        private List<string> SelectRelationWith(VarType varType)
-        {
-            throw new Exception("Relation and With not implemented yet!");
-        }
-
-        private List<int> GetStatementLines(VarType varType)
+        private List<T> GetStatementLines<T>(VarType varType)
         {
             int programLength = Pkb.GetProgramLength();
-            return varType switch
+
+            if (typeof(T) == typeof(int))
             {
-                var type when type == VarType.STMT => new List<int>(Enumerable.Range(1, programLength).ToArray()),
-                var type when type == VarType.ASSIGN => Pkb.GetAssigns(),
-                var type when type == VarType.PROG_LINE => new List<int>(Enumerable.Range(1, programLength).ToArray()),
-                var type when type == VarType.WHILE => Pkb.GetWhiles(),
-                _ => throw new Exception("Błąd składniowy!"),
-            };
+                return varType switch
+                {
+                    var type when type == VarType.STMT => new List<T>(Enumerable.Range(1, programLength).Cast<T>().ToList()),
+                    var type when type == VarType.ASSIGN => Pkb.GetAssigns().Cast<T>().ToList(),
+                    var type when type == VarType.PROG_LINE => new List<T>(Enumerable.Range(1, programLength).Cast<T>().ToList()),
+                    var type when type == VarType.WHILE => Pkb.GetWhiles().Cast<T>().ToList(),
+                    _ => throw new Exception("Błąd składniowy!"),
+                };
+            }
+            else if (typeof(T) == typeof(string))
+            {
+                return varType switch
+                {
+                    var type when type == VarType.VARIABLE => Pkb.GetVariables().Cast<T>().ToList(),
+                    var type when type == VarType.CONSTANT => Pkb.GetConstants().Cast<T>().ToList(),
+                    _ => throw new Exception("Błąd składniowy!"),
+                };
+            }
+            else
+            {
+                throw new Exception("Unsupported type!");
+            }
+        }
+
+        private List<T> IntersectByproductWithEntityList<T>(string synonym, List<T> results)
+        {
+            string synonymType = declarationsMap[synonym];
+            VarType varType = VarType.GetVarType(synonymType);
+            List<T> designEntities = GetStatementLines<T>(varType);
+            var commonPart = designEntities.Intersect(results);
+            results = commonPart.ToList();
+            return results;
         }
     }
 }

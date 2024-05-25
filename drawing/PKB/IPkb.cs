@@ -24,17 +24,21 @@ namespace SPA.PKB
 
         void SetUses(int statement, string variable);
 
-        List<Variable> GetUsed(int statement);
+        List<string> GetUsed(int statement);
 
         List<int> GetUses(string variable);
+
+        List<int> GetAllStatementsThatUseVariables();
 
         bool IsUsed(string variable,int statement);
 
         void SetModifies(int statement, string variable);
 
-        List<Variable> GetModified(int statementNumber);
+        List<string> GetModified(int statementNumber);
 
         List<int> GetModifies(string variable);
+
+        List<int> GetAllStatementsThatModifieVariables();
 
         bool IsModified(string variable, int statement);
 

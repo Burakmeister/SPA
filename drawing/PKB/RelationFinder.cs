@@ -30,9 +30,9 @@ namespace SPA.PKB
                 foreach (int child in pkb.GetChildren(wh))
                 {
                     pkb.GetUsed(child).ForEach(var =>
-                        pkb.SetUses(wh, var.VarName));
+                        pkb.SetUses(wh, var));
                     pkb.GetModified(child).ForEach(var =>
-                        pkb.SetModifies(wh, var.VarName));
+                        pkb.SetModifies(wh, var));
                 }
             }
         }
