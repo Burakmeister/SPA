@@ -73,16 +73,19 @@ namespace SPA.ViewModels
             {
                 string query = _codeQuery;
                 _processor = new QueryProcessorExec(query, pkb);
+                List<string> synonyms = _processor.Query.Synonyms;
                 Dictionary<string, List<string>> results = _processor.Query.Result;
 
-                Dictionary<string, List<string>>.ValueCollection values = results.Values;
-              ResultQuery = "";
-                foreach (List<string> list in  values)
+                //Dictionary<string, List<string>>.ValueCollection values = results.Values;
+                ResultQuery = "";
+                foreach (string synonym in synonyms)
                 {
-                    foreach (string result in list)
+                    ResultQuery += synonym + " ";
+                    foreach (string result in results[synonym])
                     {
                         ResultQuery += result + ' ';
-                    }                    
+                    }
+                    ResultQuery += "\n";
                 }
                 OnPropertyChanged(nameof(ResultQuery));
                 MessageBox.Show("Query executed");

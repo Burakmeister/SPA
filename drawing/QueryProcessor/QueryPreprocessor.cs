@@ -35,7 +35,7 @@ namespace SPA.QueryProcessor
                 },
                 { "Follows*",
                     (2, new[] { TokenType.IDENT, TokenType.INTEGER }, new[] { TokenType.IDENT, TokenType.INTEGER },
-                    (arg1, arg2) => new FollowsT { StmtRef = arg1, StmtRef2 = arg2 },
+                    (arg1, arg2) => new FollowsT { leftStmtRef = arg1, rightStmtRef = arg2 },
                     null)
                 },
                 { "Parent", 

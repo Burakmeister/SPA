@@ -288,7 +288,7 @@ namespace SPA.PKB
             for (int i = 1; i < programLength; i++)
             {
                 if (GetChildren(i).Count > 0)
-                    toRet.Add(GetChildren(i)[0]);
+                    toRet.AddRange(GetChildren(i));
             }
             return toRet;
         }
