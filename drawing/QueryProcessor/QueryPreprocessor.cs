@@ -79,7 +79,8 @@ namespace SPA.QueryProcessor
             // Wsm bez różnicy, to strata pamięci wielkości małej listy
             _query.Declarations = ValidateDeclarations();
             Match("Select");
-            _query.Synonym = Match(TokenType.IDENT).Value;
+            _query.Synonym = ValidateSynonyms();
+            //_query.Synonym = Match(TokenType.IDENT).Value;
 
             // Sprawdź dwa następne tokeny
             if (Peek(1) == "such" && Peek(2) == "that") 

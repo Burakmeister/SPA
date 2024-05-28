@@ -9,7 +9,7 @@ namespace SPA.QueryProcessor
     internal class Query
     {
         public List<Declaration> Declarations { get; set; }
-        public string Synonym { get; set; }
+        public List<string> Synonym { get; set; }
         public SuchThat SuchThatClause { get; set; }
         public With WithClause { get; set; }
 
