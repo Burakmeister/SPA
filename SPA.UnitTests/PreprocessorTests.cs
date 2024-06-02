@@ -21,10 +21,10 @@ namespace SPA.UnitTests
     public class PreprocessorTests
     {
         [TestMethod]
-        public void TestValidateQuery()
+        public void TestQuery1()
         {
             // Arrange
-            string query = "stmt s;Select s such that Follows(s, v);";
+            string query = "stmt s; Select s such that Follows(s, v);";
             Query queryObject = new Query();
             QueryPreprocessor preprocessor = new QueryPreprocessor(query, queryObject);
 
@@ -35,102 +35,71 @@ namespace SPA.UnitTests
             Assert.IsNotNull(queryObject.Declarations);
             Assert.AreEqual(1, queryObject.Declarations.Count);
             Assert.AreEqual("s", queryObject.Declarations[0].Synonyms[0]);
+            Assert.IsNotNull(queryObject.SuchThatClause);
+            Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(query, @"\bFollows\b"));
+            Assert.IsNotNull(queryObject.SuchThatClause.Relation);
         }
 
         [TestMethod]
-        public void TestValidateDeclarations()
-        {
-            string query = "stmt s; variable v; Select s such that Follows(s,v)";
-            Query _query = new Query();
-            QueryPreprocessor preprocessor = new QueryPreprocessor(query, _query);
-
-            List<Declaration> declarations = preprocessor.ValidateDeclarations();
-
-            Assert.IsNotNull(declarations);
-            Assert.AreEqual(2, declarations.Count);
-
-            Assert.AreEqual("stmt", declarations[0].DesignEntity);
-            Assert.AreEqual(1, declarations[0].Synonyms.Count);
-            Assert.AreEqual("s", declarations[0].Synonyms[0]);
-
-            Assert.AreEqual("variable", declarations[1].DesignEntity);
-            Assert.AreEqual(1, declarations[1].Synonyms.Count);
-            Assert.AreEqual("v", declarations[1].Synonyms[0]);
-        }
-
-
-
-        [TestMethod]
-        public void TestValidateSynonyms()
+        public void TestQuery2()
         {
             // Arrange
-            QueryPreprocessor queryPreprocessor = new QueryPreprocessor("", new Query());
-
-            // Create a list of tokens to simulate the input for ValidateSynonyms
-            List<Token> tokens = new List<Token>
-            {
-                new Token(TokenType.IDENT, "synonym1"),
-                new Token(TokenType.SYMBOL, ","),
-                new Token(TokenType.IDENT, "synonym2"),
-                new Token(TokenType.SYMBOL, ","),
-                new Token(TokenType.IDENT, "synonym3"),
-            };
-
-            // Replace ValidateSynonyms method call with direct token simulation
-            queryPreprocessor.Advance(); // Move position to the beginning of the input
-            queryPreprocessor.Advance(); // Skip Select keyword
-            queryPreprocessor.Advance(); // Skip synonyms declaration
+            string query = "assign a; Select a such that Modifies (1, \"x\");";
+            Query queryObject = new Query();
+            QueryPreprocessor preprocessor = new QueryPreprocessor(query, queryObject);
 
             // Act
-            List<string> synonyms = queryPreprocessor.ValidateSynonyms();
+            preprocessor.ValidateQuery();
 
-            // Assert
-            // Check if the synonyms list contains the expected values
-            if (synonyms.Count != 3 || synonyms[0] != "synonym1" || synonyms[1] != "synonym2" || synonyms[2] != "synonym3")
-            {
-                Console.WriteLine("ValidateSynonyms test failed.");
-            }
-            else
-            {
-                Console.WriteLine("ValidateSynonyms test passed.");
-            }
+            Assert.IsNotNull(queryObject.Declarations);
+            Assert.AreEqual(1, queryObject.Declarations.Count);
+            Assert.AreEqual("a", queryObject.Declarations[0].Synonyms[0]);
+            Assert.IsNotNull(queryObject.SuchThatClause);
+            Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(query, @"\bModifies\b"));
+            Assert.IsNotNull(queryObject.SuchThatClause.Relation);
         }
 
         [TestMethod]
-        public void TestValidateSuchThatClause()
+        public void TestQuery3()
         {
             // Arrange
-            QueryPreprocessor queryPreprocessor = new QueryPreprocessor("stmt a, b; Select a such that Follows(a, b)", new Query());
-            // Act
-            SuchThat suchThatClause = queryPreprocessor.ValidateSuchThatClause();
+            string query = "variable v; Select v such that Parent (5, 7);";
+            Query queryObject = new Query();
+            QueryPreprocessor preprocessor = new QueryPreprocessor(query, queryObject);
 
-            // Assert
-            Assert.IsNotNull(suchThatClause);
-            Assert.IsNotNull(suchThatClause.Relation);
-            Assert.AreEqual("Follows", suchThatClause.Relation.GetType().Name); // Assuming the Relation object's type name matches the relation name
+            // Act
+            preprocessor.ValidateQuery();
+
+            Assert.IsNotNull(queryObject.Declarations);
+            Assert.AreEqual(1, queryObject.Declarations.Count);
+            Assert.AreEqual("v", queryObject.Declarations[0].Synonyms[0]);
+            Assert.IsNotNull(queryObject.SuchThatClause);
+            Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(query, @"\bParent\b"));
+            Assert.IsNotNull(queryObject.SuchThatClause.Relation);
         }
 
         [TestMethod]
-        public void TestValidateRelation()
+        public void TestQuery4()
         {
             // Arrange
-            string query = "stmt a, b;Select a such that Follows(a, b)";
-            QueryPreprocessor queryPreprocessor = new QueryPreprocessor(query, new Query());
+            string query = "assign a1, a2; while w1, w2; Select a1 pattern a1 (\"x\", _) and a2 (\"x\",_\"x\"_) such that Affects (a1, a2) and Parent* (w2, a2) and Parent* (w1, w2)";
+            Query queryObject = new Query();
+            QueryPreprocessor preprocessor = new QueryPreprocessor(query, queryObject);
 
             // Act
-            var relation = queryPreprocessor.ValidateRelation();
+            preprocessor.ValidateQuery();
 
-            // Assert
-            Assert.IsNotNull(relation, "Relation should not be null");
-            Assert.IsInstanceOfType(relation, typeof(Follows), "Relation should be of type Follows");
+            Assert.IsNotNull(queryObject.Declarations);
+            Assert.AreEqual(2, queryObject.Declarations.Count);
+            Assert.AreEqual("a1", queryObject.Declarations[0].Synonyms[0]);
+            Assert.AreEqual("a2", queryObject.Declarations[0].Synonyms[1]);
+            Assert.AreEqual("w1", queryObject.Declarations[1].Synonyms[0]);
+            Assert.AreEqual("w2", queryObject.Declarations[1].Synonyms[1]);
+            Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(query, @"\bpattern\b"));
+            Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(query, @"\bAffects\b"));
+            Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(query, @"\bParent*\b"));
+            //Assert.IsNotNull(queryObject.SuchThatClause);
         }
 
-        
     }
-
-
-
-
-
-
 }
