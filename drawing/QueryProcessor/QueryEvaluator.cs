@@ -113,7 +113,7 @@ namespace SPA.QueryProcessor
             }
 
             if (With != null)
-            {
+            {            
                 results = SelectWith(With! ,results);
             }
 
@@ -730,37 +730,61 @@ namespace SPA.QueryProcessor
         private Dictionary<string, List<string>> SelectWith(With with, Dictionary<string, List<string>> results)
         {
             string AttrName = with.AttrName;
+            string withSynonym = with.Synonym;
 
             if (AttrName == "varName")
             {
-                //string variable = with.Value;
-                //Dictionary<string, List<string>> FilteredResults = new Dictionary<string, List<string>>();
-            
-                //foreach (string key in results.Keys)
-                //{
-                //    FilteredResults.Add(key, new List<string>());
-                //}
-                //foreach (string varInResults in results[with.Synonym])
-                //{
-                //    if (varInResults == variable)
-                //    {
-                        
-                //    }
-                //}
-                //results = FilteredResults;
-          
+                string variable = with.Value;
+                if (Pkb.GetVariableIndex(variable) != -1)
+                {
+                    results[withSynonym].Add(variable);
+                }
+                else
+                {
+                    // koniec ewaluacji zapytania? bo to oznacza, że nie będzie wyniku
+                }
             }
             else if (AttrName == "value")
             {
-                
+                int value = int.Parse(with.Value);
+                if (Pkb.isConstInConstants(value))
+                {
+                    results[withSynonym].Add(with.Value);
+                }
+                else
+                {
+                    // koniec ewaluacji zapytania? bo to oznacza, że nie będzie wyniku
+                }
             }
             else if (AttrName == "stmt#")
             {
-                
+                int stmtNumber = int.Parse(with.Value);
+                if (stmtNumber > 0 && stmtNumber <= Pkb.GetProgramLength())
+                {
+                    List<int> ints = new List<int>();
+                    ints.Add(stmtNumber);
+                    ints = IntersectByproductWithEntityList(withSynonym, ints);
+                    if (ints.Count > 0)
+                    {
+                        results[withSynonym].Add(ints.First().ToString());
+                    }
+                    else
+                    {
+                        // koniec ewaluacji zapytania? bo to oznacza, że nie będzie wyniku
+                    }
+                }
             }
             else if (AttrName == "procName")
             {
-                 
+                string procName = with.Value;
+                if (Pkb.GetProcedureIndex(procName) != 1)
+                {
+                    results[withSynonym].Add(procName);
+                }
+                else
+                {
+                    // koniec ewaluacji zapytania? bo to oznacza, że nie będzie wyniku
+                }
             }
 
             return results;

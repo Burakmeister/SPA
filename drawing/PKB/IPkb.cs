@@ -86,6 +86,8 @@ namespace SPA.PKB
 
         List<int> GetConstants();
 
+        bool isConstInConstants(int c);
+
         int GetProgramLength();
 
         List<int> GetAllStatements();

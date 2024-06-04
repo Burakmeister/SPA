@@ -427,6 +427,18 @@ namespace SPA.PKB
             return constants;
         }
 
+        public bool isConstInConstants(int c)
+        {
+            if (constants.Contains(c))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         public void ClearPkb(int statementCount)
         {
             programLength = statementCount;
