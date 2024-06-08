@@ -10,5 +10,15 @@ namespace SPA.QueryProcessor
     {
         public StmtRef leftStmtRef { get; set; }
         public StmtRef rightStmtRef { get; set; }
+
+        public override string FirstElement()
+        {
+            return StmtRef.Value;
+        }
+
+        public override string SecondElement()
+        {
+            return StmtRef2.Value;
+        }
     }
 }

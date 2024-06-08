@@ -9,6 +9,10 @@ namespace SPA.QueryProcessor
 {
     public abstract class Relation
     {
-        //public abstract Dictionary<string, List<string>> EvaluateRelation(Dictionary<string, List<string>> Results, IPkb pkb);
+        // Metody, które pozwolą uzyskać elementy relacji
+        // bez względu na typ
+        public abstract string FirstElement();
+        public abstract string SecondElement();
+
     }
 }

@@ -12,20 +12,15 @@ namespace SPA.QueryProcessor
         public StmtRef leftStmtRef { get; set; }
         public StmtRef rightStmtRef { get; set; }
 
-        //public override Dictionary<string, List<string>> EvaluateRelation(Dictionary<string, List<string>> results, IPkb pkb)
-        //{
-        //    string[] keys = results.Keys.ToArray();
+        public override string FirstElement()
+        {
+            return StmtRef.Value;
+        }
 
-        //    if (keys.Contains(leftStmtRef.Value) && rightStmtRef2.Value == "_")
-        //    {
-        //        for(int i = 0;i < pkb.programLength)
-        //    }
-        //    else
-        //    {
+        public override string SecondElement()
+        {
+            return StmtRef2.Value;
+        }
 
-        //    }
-
-        //    throw new NotImplementedException();
-        //}
     }
 }
