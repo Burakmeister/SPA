@@ -8,5 +8,9 @@ namespace SPA.QueryProcessor
 {
     public abstract class Relation
     {
+        // Metody, które pozwolą uzyskać elementy relacji
+        // bez względu na typ
+        public abstract string FirstElement();
+        public abstract string SecondElement();
     }
 }
