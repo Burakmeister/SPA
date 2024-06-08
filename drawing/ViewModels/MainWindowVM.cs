@@ -12,12 +12,13 @@ using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
 using Xceed.Wpf.Toolkit;
 
-namespace drawing.ViewModels
+namespace SPA.ViewModels
 {
     public class MainWindowVM : IMainWindowVM
     {
 
         public IDrawer Drawer { get; set; }
+        public IDrawerAST DrawerAST{ get; set; }
 
         public MainWindowVM(IIoC ioc)
         {

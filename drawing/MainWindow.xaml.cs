@@ -1,8 +1,9 @@
-﻿using drawing.ViewModels;
-using SPA.QueryProcessor;
+
+using SPA.ViewModels;
+
 using System.Windows;
 
-namespace drawing
+namespace SPA
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

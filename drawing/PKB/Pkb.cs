@@ -1,101 +1,167 @@
-﻿using System;
+﻿using SPA.DesignEntities;
+using SPA.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using SPA.DesignEntities;
-
 namespace SPA.PKB
 {
-    public class Pkb
+    public class Pkb : IPkb
     {
-        private static Pkb instance;
-        private List<string> varTable;
-        private List<string> procTable;
-        private Dictionary<Statement, Statement> followsTable;
-        private Dictionary<Statement, List<Statement>> parentTable;
-        private Dictionary<Statement, List<Variable>> usesTable;
-        private Dictionary<Statement, List<Variable>> modifiesTable;
+        public Program? program { get; set; } = null;
 
-        //singleton konstruktor
-        private Pkb()
+        private static Pkb instance;
+        private string[] varTable;
+        private string[] procTable;
+
+        int firstEmptyProcTableIndex;
+        int firstEmptyVarTableIndex;
+
+        private int[] follows;
+        private List<int>[] parents;
+        private List<int>[] uses;
+        private int[] modifies;
+
+        // konstruktor zapobiegający kolejnym instancjom
+        private Pkb(int statementCount)
         {
-            varTable = new List<string>();
-            procTable = new List<string>();
-            followsTable = new Dictionary<Statement, Statement>();
-            parentTable = new Dictionary<Statement, List<Statement>>();
-            usesTable = new Dictionary<Statement, List<Variable>>();
-            modifiesTable = new Dictionary<Statement, List<Variable>>();
+            varTable = new string[100];
+            procTable = new string[50];
+
+            modifies = new int[statementCount];
+            InitializeArrayWithValue(modifies, -1);
+            follows = new int[statementCount];
+            parents = new List<int>[statementCount];
+            uses = new List<int>[statementCount];
+
+            firstEmptyProcTableIndex = 0;
+            firstEmptyVarTableIndex = 0;
         }
 
-        //wywołanie instancji
-        public static Pkb GetInstance()
+        private void InitializeArrayWithValue(int[] array, int value)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = value;
+            }
+        }
+
+        public static Pkb GetInstance(int statementcount)
         {
             if (instance == null)
             {
-                instance = new Pkb();
+                instance = new Pkb(statementcount);
             }
             return instance;
         }
 
         public void SetFollows(Statement firstStatement, Statement nextStatement)
         {
-            followsTable[firstStatement] = nextStatement;
+            follows[firstStatement.LineNumber] = nextStatement.LineNumber;
         }
 
-        public List<Statement> GetFollowed(Statement firstStatement)
+        public List<int> GetFollowed(Statement firstStatement)
         {
-            List<Statement> followedStatements = new List<Statement>();
-            foreach (var entry in followsTable)
-            {
-                if (entry.Value == firstStatement)
-                {
-                    followedStatements.Add(entry.Key);
-                }
-            }
-            return followedStatements;
+            return new List<int>() { follows[firstStatement.LineNumber] };
         }
 
-        public List<Statement> GetFollows(Statement nextStatement)
+        public List<int> GetFollows(Statement nextStatement)
         {
-            List<Statement> followingStatements = new List<Statement>();
-            foreach (var entry in followsTable)
+            List<int> result = new List<int>();
+
+            for (int i = 0; i < follows.Length; i++)
             {
-                if (entry.Key == nextStatement)
+                if (follows[i] == nextStatement.LineNumber)
                 {
-                    followingStatements.Add(entry.Value);
+                    result.Add(i);
                 }
             }
-            return followingStatements;
+            return result;
+        }
+
+        public bool IsFollowed(Statement firstStatement, Statement nextStatement)
+        {
+            if (follows[firstStatement.LineNumber]==nextStatement.LineNumber)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public void SetModifies(Statement statement, Variable variable)
+        {
+            modifies[statement.LineNumber] = GetVariableIndex(variable.VarName);
+        }
+
+        public List<Variable> GetModified(Statement statement)
+        {
+            int variableIndex = modifies[statement.LineNumber];
+            if (variableIndex >= 0)
+            {
+                string variableName = varTable[variableIndex];
+                Variable var = new Variable(variableName, 0);
+                return new List<Variable>() { var };
+            }
+            else
+            {
+                    throw new OutOfBoundsIndexException();
+            }
+
+        }
+
+        public List<int> GetModifies(Variable variable)
+        {
+            List<int> result = new List<int>();
+            int varIndex = GetVariableIndex(variable.VarName);
+            for (int i = 0; i < modifies.Length; i++)
+            {
+                if (modifies[i] == varIndex)
+                {
+                    result.Add(i);
+                }
+            }
+            return result;
+        }
+
+        public bool IsModified(Variable variable, Statement statement)
+        {
+            if (modifies[statement.LineNumber] == GetVariableIndex(variable.VarName))
+            {
+                return true;
+            }
+            return false;
         }
 
         public void SetUses(Statement statement, Variable variable)
         {
-            if (!usesTable.ContainsKey(statement))
-            {
-                usesTable[statement] = new List<Variable>();
-            }
-            usesTable[statement].Add(variable);
+            uses[statement.LineNumber].Add(GetVariableIndex(variable.VarName));
         }
 
         public List<Variable> GetUsed(Statement statement)
         {
-            if (usesTable.ContainsKey(statement))
+            List<int> usedVariables = uses[statement.LineNumber];
+            List<Variable> variables = new List<Variable>();
+
+            foreach (int index in usedVariables)
             {
-                return usesTable[statement];
+                string variableName = varTable[index];
+                Variable var = new Variable(variableName, 0);
+                variables.Add(var);
             }
-            return new List<Variable>();
+            return variables;
         }
 
-        public List<Statement> GetUses(Variable variable)
+        public List<int> GetUses(Variable variable)
         {
-            List<Statement> statements = new List<Statement>();
-            foreach (var entry in usesTable)
+            List<int> statements = new List<int>();
+            int varIndex = GetVariableIndex(variable.VarName);
+            for (int i = 0; i < uses.Length; i++)
             {
-                if (entry.Value.Contains(variable))
+                if (uses[i].Contains(varIndex))
                 {
-                    statements.Add(entry.Key);
+                    statements.Add(i);
                 }
             }
             return statements;
@@ -103,112 +169,170 @@ namespace SPA.PKB
 
         public bool IsUsed(Variable variable, Statement statement)
         {
-            if (usesTable.ContainsKey(statement))
+            if (uses[statement.LineNumber].Contains(GetVariableIndex(variable.VarName)))
             {
-                return usesTable[statement].Contains(variable);
+                return true;
             }
             return false;
         }
 
-        public void SetModifies(Statement statement, Variable variable)
+        public void SetParent(Statement parentStatement, Statement childStatement)
         {
-            if (!modifiesTable.ContainsKey(statement))
-            {
-                modifiesTable[statement] = new List<Variable>();
-            }
-            modifiesTable[statement].Add(variable);
+            parents[parentStatement.LineNumber].Add(childStatement.LineNumber);
         }
 
-        public List<Variable> GetModified(Statement statement)
+        public List<int> GetChildren(Statement parentStatement)
         {
-            if (modifiesTable.ContainsKey(statement))
-            {
-                return modifiesTable[statement];
-            }
-            return new List<Variable>();
+            return parents[parentStatement.LineNumber];
         }
 
-        public List<Statement> GetModifies(Variable variable)
+        public int GetParent(Statement childStatement)
         {
-            List<Statement> statements = new List<Statement>();
-            foreach (var entry in modifiesTable)
+            for (int i = 0; i < parents.Length; i++)
             {
-                if (entry.Value.Contains(variable))
+                if (parents[i].Contains(childStatement.LineNumber))
                 {
-                    statements.Add(entry.Key);
+                    return i;
                 }
             }
-            return statements;
+
+            return -1; //czy to jest dobrze?
         }
 
-        public bool IsModified(Variable variable, Statement statement)
+        public bool IsParent(Statement parentStatement, Statement childStatement)
         {
-            if (modifiesTable.ContainsKey(statement))
+            if (parents[parentStatement.LineNumber].Contains(childStatement.LineNumber))
             {
-                return modifiesTable[statement].Contains(variable);
+                return true;
             }
+
             return false;
         }
 
-        public int InsertVariable(string variableName)
+        public int InsertProcedure(string procedureName)
         {
-            if (!varTable.Contains(variableName))
+            int index = 0;
+            while (true)
             {
-                varTable.Add(variableName);
+                if (firstEmptyProcTableIndex == index)
+                {
+                    procTable[firstEmptyProcTableIndex] = procedureName;
+                    firstEmptyProcTableIndex++;
+                    break;
+                }
+                else
+                {
+                    if (procTable[index] == procedureName)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        index++;
+                    }
+                }
             }
+            return index;
         }
 
-        public string GetVariableName(int index)
+        public int GetProcedureIndex(string ProcedureName)
         {
-            if (index >= 0 && index < varTable.Count)
+            int index = 0;
+            while (procTable[index] != ProcedureName && index < procTable.Length)
             {
-                return varTable[index];
+                index++;
             }
-            return null;
-        }
-
-        public int GetVariableIndex(string variableName)
-        {
-            if (varTable.Contains(variableName))
+            if (index < procTable.Length)
             {
-                return varTable[variableName];
+                return index;
             }
             else
             {
-                return -1;
+                return -1; // procedure name not in procTable
             }
         }
 
-        public void InsertProcedure(string procedureName)
+        public string GetProcedureName(int index)
         {
-            if (!procTable.Contains(procedureName))
+            if (index >= 0 && index < procTable.Length)
             {
-                procTable.Add(procedureName);
+                return procTable[index];
+            }
+            else
+            {
+                throw new Exception();
             }
         }
 
         public int GetProcTableSize()
         {
-            return procTable.Count;
+            return procTable.Length;
         }
 
-        public string GetProcedureName(int index)
+        public int InsertVariable(string variableName)
         {
-            if (index >= 0 && index < procTable.Count)
+            int index = 0;
+            while (true)
             {
-                return procTable[index];
+                if (firstEmptyVarTableIndex == index)
+                {
+                    varTable[firstEmptyVarTableIndex] = variableName;
+                    firstEmptyVarTableIndex++;
+                    break;
+                }
+                else
+                {
+                    if (varTable[index] == variableName)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        index++;
+                    }
+                }
             }
-            return null;
+            return index;
         }
 
-        public int GetProcedureIndex(string procedureName)
+        public int GetVariableIndex(string VariableName)
         {
-            if (procTable.Contains(procedureName))
-            {
-                return procTable[procedureName];
+            int index = 0;
+            while (varTable[index]!=VariableName && index<varTable.Length) {
+                index++;
+                if (index == varTable.Length)
+                {
+                    break;
+                }
             }
-            return -1;
+            if (index<varTable.Length)
+            {
+                return index;
+            }
+            else
+            {
+                return -1; // variable name not in varTable
+            }
         }
-    } 
+
+        public string GetVariableName(int index)
+        {
+            if (index>=0 && index<varTable.Length)
+            {
+                return varTable[index];
+            }
+            else
+            {
+                OutOfBoundsIndexException e = new OutOfBoundsIndexException();
+                e.Index = index;
+                throw e;
+            }
+        }
+
+        public int GetVarTableSize()
+        {
+            return varTable.Length;
+        }
+
+    }
 }
-

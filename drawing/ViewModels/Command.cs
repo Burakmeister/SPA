@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace drawing.ViewModels
+namespace SPA.ViewModels
 {
     public class Command : ICommand
     {

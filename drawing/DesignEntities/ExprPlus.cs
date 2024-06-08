@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace SPA.DesignEntities
 {
-    public abstract class Expr : Statement
+    public class ExprPlus : Expr
     {
-        protected Expr(int lineNumber) : base(lineNumber)
+        public Expr? LeftExpr { get; set; }
+        public Expr? RightExpr { get; set; }
+        public ExprPlus(int lineNumber) : base(lineNumber)
         {
         }
     }

@@ -6,10 +6,8 @@ using System.Threading.Tasks;
 
 namespace SPA.DesignEntities
 {
-    public abstract class Expr : Statement
+    public class StatementList
     {
-        protected Expr(int lineNumber) : base(lineNumber)
-        {
-        }
+        public Statement? FirstStatement { get; set; } = null;
     }
 }
