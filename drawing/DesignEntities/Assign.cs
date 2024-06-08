@@ -9,7 +9,7 @@ namespace SPA.DesignEntities
     public class Assign : Statement
     {
         public Variable Var { get; private set; }
-        private Expr? Expr { get; set; }
+        public Expr? Expr { get; set; }
         public Assign(int lineNumber, string varName, Expr? expr) : base(lineNumber)
         {
             Expr = expr;

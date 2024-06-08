@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 
 namespace SPA.QueryProcessor
 {
-    internal class Query
+    public class Query
     {
+        public Dictionary<string, List<string>> Result { get; set; } = null;
         public List<Declaration> Declarations { get; set; }
-        public List<string> Synonym { get; set; }
-        public SuchThat SuchThatClause { get; set; }
-        public With WithClause { get; set; }
 
+        public List<string> Synonyms { get; set; } = null;
+        public SuchThat? SuchThatClause { get; set; }
+        public With? WithClause { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SPA.PKB;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,5 +13,6 @@ namespace SPA.QueryProcessor
         // bez względu na typ
         public abstract string FirstElement();
         public abstract string SecondElement();
+
     }
 }

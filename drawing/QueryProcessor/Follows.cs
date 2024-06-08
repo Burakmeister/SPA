@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SPA.PKB;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +9,8 @@ namespace SPA.QueryProcessor
 {
     internal class Follows : Relation
     {
-        public StmtRef StmtRef { get; set; }
-        public StmtRef StmtRef2 { get; set; }
+        public StmtRef leftStmtRef { get; set; }
+        public StmtRef rightStmtRef { get; set; }
 
         public override string FirstElement()
         {
@@ -20,5 +21,6 @@ namespace SPA.QueryProcessor
         {
             return StmtRef2.Value;
         }
+
     }
 }

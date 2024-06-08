@@ -8,8 +8,8 @@ namespace SPA.QueryProcessor
 {
     internal class FollowsT : Relation
     {
-        public StmtRef StmtRef { get; set; }
-        public StmtRef StmtRef2 { get; set; }
+        public StmtRef leftStmtRef { get; set; }
+        public StmtRef rightStmtRef { get; set; }
 
         public override string FirstElement()
         {
