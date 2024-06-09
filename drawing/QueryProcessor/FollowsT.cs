@@ -13,12 +13,12 @@ namespace SPA.QueryProcessor
 
         public override string FirstElement()
         {
-            return StmtRef.Value;
+            return leftStmtRef.Value;
         }
 
         public override string SecondElement()
         {
-            return StmtRef2.Value;
+            return rightStmtRef.Value;
         }
     }
 }

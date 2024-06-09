@@ -432,7 +432,7 @@ namespace SPA.QueryProcessor
             List<string> stmtTypes = new List<string> { "stmt", "assign", "call", "while", "if" };
 
             // Walidacja synonimów w Select
-            foreach (string i in _query.Synonym)
+            foreach (string i in _query.Synonyms)
             {
                 if(!allDeclarationSynonyms.Contains(i))
                 {
