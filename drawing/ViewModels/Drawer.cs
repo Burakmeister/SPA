@@ -39,8 +39,6 @@ namespace SPA.ViewModels
                 relationFinder.FillPKB();
                 MessageBox.Show("Parsing execute");
                 currentIndex = 0;
-                //DrawerAST.DrawTree(procedures[currentIndex] as Procedure);
-                //MessageBox.Show("Tree Drawed");
             }
             catch (Exception ex)
             {

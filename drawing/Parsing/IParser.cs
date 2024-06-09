@@ -13,8 +13,10 @@ namespace SPA.Parsing
         Assign CreateAssign(ArrayList stringsList);
         Program CreateProgram();
         Program? GetProgram();
-        While CreateWhile(ArrayList stringsList);
+        While CreateWhile(ArrayList stringsList, Procedure procedure);
         int Parse(string code);
         Procedure CreateProcedure(ArrayList stringsList);
+        StatementList CreateStatementList(ArrayList stringsList, Procedure procedure);
+        If CreateIf(ArrayList stringsList, Variable variable);
     }
 }

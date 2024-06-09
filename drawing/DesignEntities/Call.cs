@@ -6,7 +6,14 @@ using System.Threading.Tasks;
 
 namespace SPA.DesignEntities
 {
-    public class Call
+    public class Call : Statement
     {
+        public Procedure? CallingProcedure { get; set; }
+        public Procedure? CalledProcedure { get; set; }
+
+        public Call(Procedure callingProcedure, int lineNumber) : base(lineNumber)
+        {
+            CallingProcedure = callingProcedure;
+        }
     }
 }

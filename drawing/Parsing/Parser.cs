@@ -13,8 +13,10 @@ namespace SPA.Parsing
 {
     public class Parser : IParser
     {
-        private Program? program { get; set; } = null;
+        private Program? Program { get; set; } = null;
         private int lineNumber;
+        private Dictionary<Call, string> calledProcedures = new();
+        public List<Variable> VarList { get; set; } = new();
 
         public Program CreateProgram()
         {
@@ -23,55 +25,82 @@ namespace SPA.Parsing
 
         public Program? GetProgram()
         {
-            return program;
+            return Program;
         }
 
-        public While CreateWhile(ArrayList stringsList)
+        public While CreateWhile(ArrayList stringsList, Procedure procedure)
         {
             if (stringsList[^1] as string == "}" && stringsList[2] as string == "{" && IsNameAccepted(stringsList[1] as string))
             {
                 Variable var = new Variable((stringsList[1] as string)!, lineNumber);
                 While newWhile = new While(lineNumber, var);
-                lineNumber++;
-                StatementList statementList = new StatementList();
-                newWhile.StatementList = statementList;
-                Statement? statement = null ;
-                Statement? prevStatement = null;
-                for (int i = 3; i < stringsList.Count - 1;)
-                {
-                    if (stringsList[i] as string == "while")
-                    {
-                        int whileStart = i;
-                        int whileLength = FindClosingBracket(stringsList.GetRange(whileStart, stringsList.Count - whileStart)) + 1;
-                        statement = CreateWhile(stringsList.GetRange(whileStart, whileLength));
-                        i += whileLength;
-                    }
-                    else
-                    {
-                        int assignStart = i;
-                        int assignLength = FindSemicolon(stringsList.GetRange(assignStart, stringsList.Count - assignStart)) + 1;
-                        statement = CreateAssign(stringsList.GetRange(assignStart, assignLength));
-                        i+= assignLength;
-                    }
-                    lineNumber++;
-
-                    if (statementList.FirstStatement == null)
-                    {
-                        statementList.FirstStatement = statement;
-                    }
-                    else
-                    {
-                        prevStatement!.NextStatement = statement;
-                    }
-                    prevStatement = statement;
-                }
-                lineNumber--;
+                newWhile.StatementList = CreateStatementList(stringsList.GetRange(2, stringsList.Count-2), procedure);
                 return newWhile;
             }
             else
             {
                 throw new Exception("Nieprawidłowo zdefiniowana pętla while!");
             }
+        }
+
+        public If CreateIf(ArrayList stringsList, Variable variable)
+        {
+            return new If(lineNumber, variable);
+        }
+
+        public StatementList CreateStatementList(ArrayList stringsList, Procedure procedure)
+        {
+            lineNumber++;
+            StatementList statementList = new StatementList();
+            Statement? statement = null;
+            Statement? prevStatement = null;
+            for (int i = 1; i < stringsList.Count - 1;)
+            {
+                if (stringsList[i] as string == "while")
+                {
+                    int whileStart = i;
+                    int whileLength = FindClosingBracket(stringsList.GetRange(whileStart, stringsList.Count - whileStart)) + 1;
+                    statement = CreateWhile(stringsList.GetRange(whileStart, whileLength), procedure);
+                    i += whileLength;
+                }
+                else if (stringsList[i] as string == "call")
+                {
+                    statement = new Call(procedure, lineNumber);
+                    i++;
+                    calledProcedures.Add((statement as Call)!, (stringsList[i] as string)!.Remove((stringsList[i]! as string)!.Length - 1));
+                    i++;
+                }
+                else if (stringsList[i] as string == "if")
+                {
+                    i++;
+                    Variable variable = new Variable((stringsList[i] as string)!, lineNumber);
+                    int ifStart = i;
+                    int ifLength = FindClosingBracket(stringsList.GetRange(ifStart, stringsList.Count - ifStart)) + 1;
+                    statement = CreateIf(stringsList.GetRange(ifStart, ifLength), variable);
+                    i += ifLength;
+
+                }
+                else
+                {
+                    int assignStart = i;
+                    int assignLength = FindSemicolon(stringsList.GetRange(assignStart, stringsList.Count - assignStart)) + 1;
+                    statement = CreateAssign(stringsList.GetRange(assignStart, assignLength));
+                    i += assignLength;
+                }
+                lineNumber++;
+
+                if (statementList.FirstStatement == null)
+                {
+                    statementList.FirstStatement = statement;
+                }
+                else
+                {
+                    prevStatement!.NextStatement = statement;
+                }
+                prevStatement = statement;
+            }
+            lineNumber--;
+            return statementList;
         }
 
         private bool IsNameAccepted(string? name)
@@ -119,7 +148,7 @@ namespace SPA.Parsing
                                 int constant = int.Parse((stringsList[i] as string)![..^1]);
                                 vars.Add(new Constant(constant, lineNumber));
                             }
-                            catch(Exception e)
+                            catch(Exception)
                             {
                                 throw new Exception("Nieprawidłowa nazwa zmiennej! " + "[" + lineNumber + "]");
                             }
@@ -136,7 +165,7 @@ namespace SPA.Parsing
                             int constant = int.Parse((stringsList[i] as string)!);
                             vars.Add(new Constant(constant, lineNumber));
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             throw new Exception("Nieprawidłowa nazwa zmiennej! " + "[" + lineNumber + "]");
                         }
@@ -179,7 +208,7 @@ namespace SPA.Parsing
             string[] strings = strippedCode.Split(' ');
             Procedure? procedure;
             Procedure? prevProcedure = null;
-            program = CreateProgram();
+            Program = CreateProgram();
             ArrayList stringsList = new(strings);
 
             lineNumber = 0;
@@ -192,9 +221,9 @@ namespace SPA.Parsing
                     int procedureLength = FindClosingBracket(stringsList.GetRange(procedureStart, stringsList.Count - procedureStart)) + 1;
                     procedure = CreateProcedure(stringsList.GetRange(procedureStart, procedureLength));
                     i += procedureLength;
-                    if (program!.FirstProcedure == null)
+                    if (Program!.FirstProcedure == null)
                     {
-                        program.FirstProcedure = procedure;
+                        Program.FirstProcedure = procedure;
                     }
                     else
                     {
@@ -203,6 +232,12 @@ namespace SPA.Parsing
                     prevProcedure = procedure;
                 }
             }
+
+            foreach (Call call in calledProcedures.Keys.ToArray())
+            {
+                string procName = calledProcedures.GetValueOrDefault(call)!;
+                call.CalledProcedure = FindProcedureByName(Program, procName);
+            }
             return lineNumber;
         }
 
@@ -210,38 +245,9 @@ namespace SPA.Parsing
         {
             if (stringsList[^1] as string == "}" && stringsList[2] as string == "{" && IsNameAccepted(stringsList[1] as string))
             {
-                Procedure newProcedure = new Procedure((stringsList[1] as string)!);
-                StatementList statementList = new StatementList();
-                Statement? statement;
-                Statement? prevStatement = null;
-                newProcedure.StatementList = statementList;
-                for(int i=3; i<stringsList.Count-1;)
-                {
-                    if (stringsList[i] as string == "while")
-                    {
-                        int whileStart = i;
-                        int whileLength = FindClosingBracket(stringsList.GetRange(whileStart, stringsList.Count - whileStart)) + 1;
-                        statement = CreateWhile(stringsList.GetRange(whileStart, whileLength));
-                        i += whileLength;
-                    }
-                    else
-                    {
-                        int assignStart = i;
-                        int assignLength = FindSemicolon(stringsList.GetRange(assignStart, stringsList.Count - assignStart)) + 1;
-                        statement = CreateAssign(stringsList.GetRange(assignStart, assignLength));
-                        i+= assignLength;
-                    }
-                    lineNumber++;
-                    if(statementList.FirstStatement == null)
-                    {
-                        statementList.FirstStatement = statement;
-                    }
-                    else 
-                    { 
-                        prevStatement!.NextStatement = statement;
-                    }
-                    prevStatement = statement;
-                }
+                Procedure newProcedure = new Procedure((stringsList[1] as string)!, lineNumber+1);
+                newProcedure.StatementList = CreateStatementList(stringsList.GetRange(2, stringsList.Count-2), newProcedure);
+                newProcedure.LineEndNumber = lineNumber;
                 return newProcedure;
             }
             else
@@ -284,6 +290,28 @@ namespace SPA.Parsing
                 }
             }
             throw new Exception("Brakuje średnika!");
+        }
+
+        private Procedure FindProcedureByName(Program program, string name)
+        {
+            if (program.FirstProcedure != null)
+            {
+                Procedure first = program.FirstProcedure;
+                if(first.ProcName == name)
+                {
+                    return first;
+                }
+                while (first!.NextProcedure != null)
+                {
+                    first = first.NextProcedure;
+                    if (first.ProcName == name)
+                    {
+                        return first;
+                    }
+                }
+
+            }
+            throw new Exception("Wywoływana procedura nie istnieje!");
         }
     }
 }
