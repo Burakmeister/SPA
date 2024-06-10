@@ -34,7 +34,7 @@ namespace SPA.ViewModels
                 int numOfLines;
                 numOfLines = Parser.Parse(Code);
                 CompleteProceduresList();
-                pkb = Pkb.GetInstance(numOfLines);
+                pkb = Pkb.GetInstance(numOfLines+1);
                 relationFinder = new RelationFinder(procedures, pkb);
                 relationFinder.FillPKB();
                 MessageBox.Show("Parsing execute");

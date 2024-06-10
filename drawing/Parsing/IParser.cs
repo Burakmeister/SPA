@@ -17,6 +17,6 @@ namespace SPA.Parsing
         int Parse(string code);
         Procedure CreateProcedure(ArrayList stringsList);
         StatementList CreateStatementList(ArrayList stringsList, Procedure procedure);
-        If CreateIf(ArrayList stringsList, Variable variable);
+        If CreateIf(ArrayList stringsList, Variable variable, Procedure procedure);
     }
 }

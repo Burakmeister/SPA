@@ -43,9 +43,33 @@ namespace SPA.Parsing
             }
         }
 
-        public If CreateIf(ArrayList stringsList, Variable variable)
+        public If CreateIf(ArrayList stringsList, Variable variable, Procedure procedure)
         {
-            return new If(lineNumber, variable);
+            If newIf = new If(lineNumber, variable);
+            if (stringsList[1] as string == "then" && stringsList[2] as string == "{" && stringsList[^1] as string == "}")
+            {
+                StatementList statementList = CreateStatementList(stringsList.GetRange(2, stringsList.Count-3), procedure);
+                newIf.Then = statementList;
+            }
+            else
+            {
+                throw new Exception("Nieprawidłowo zdefiniowany if!");
+            }
+            return newIf;
+        }
+
+        public StatementList CreateElse(ArrayList stringsList, Procedure procedure)
+        {
+            StatementList statementList;
+            if (stringsList[0] as string == "else" && stringsList[1] as string == "{" && stringsList[^1] as string == "}")
+            {
+                statementList = CreateStatementList(stringsList.GetRange(1, stringsList.Count-1), procedure);
+            }
+            else
+            {
+                throw new Exception("Nieprawidłowo zdefiniowany else!");
+            }
+            return statementList;
         }
 
         public StatementList CreateStatementList(ArrayList stringsList, Procedure procedure)
@@ -73,11 +97,22 @@ namespace SPA.Parsing
                 else if (stringsList[i] as string == "if")
                 {
                     i++;
+                    if (!IsNameAccepted(stringsList[1] as string))
+                    {
+                        throw new Exception("Nieprawidłowa nazwa zmiennej!");
+                    }
                     Variable variable = new Variable((stringsList[i] as string)!, lineNumber);
                     int ifStart = i;
                     int ifLength = FindClosingBracket(stringsList.GetRange(ifStart, stringsList.Count - ifStart)) + 1;
-                    statement = CreateIf(stringsList.GetRange(ifStart, ifLength), variable);
+                    statement = CreateIf(stringsList.GetRange(ifStart, ifLength), variable, procedure);
                     i += ifLength;
+                    if(stringsList[i] as string == "else")
+                    {
+                        int elseStart = i;
+                        int elseLength = FindClosingBracket(stringsList.GetRange(elseStart, stringsList.Count - elseStart)) + 1;
+                        (statement as If)!.Else = CreateElse(stringsList.GetRange(elseStart, elseLength), procedure);
+                        i += elseLength;
+                    }
 
                 }
                 else
@@ -121,7 +156,7 @@ namespace SPA.Parsing
                 Expr? expr = CreateExpr(stringsList.GetRange(2, stringsList.Count-2));
                 return new Assign(lineNumber, varName, expr);
             }
-            throw new Exception("Nieprawidłowo zdefiniowane przypisanie!");
+            throw new Exception("Nieprawidłowo zdefiniowane przypisanie! Linia: " + lineNumber);
         }
 
         public Expr? CreateExpr(ArrayList stringsList)
