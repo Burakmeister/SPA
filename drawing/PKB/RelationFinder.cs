@@ -135,9 +135,9 @@ namespace SPA.PKB
                     pkb.InsertConstant(constant.Value);
                 }
             }
-            else if (expr is ExprPlus)
+            else if (expr is ExprMinus)
             {
-                ExprPlus exprPlus = (ExprPlus)expr;
+                ExprMinus exprPlus = (ExprMinus)expr;
                 FindExprConstants(exprPlus.LeftExpr);
                 FindExprConstants(exprPlus.RightExpr);
             }
@@ -263,9 +263,9 @@ namespace SPA.PKB
                     Variable variable = (Variable)factor;
                     pkb!.SetUses(statement.LineNumber, variable.VarName);
                 }
-            } else if (expr is ExprPlus)
+            } else if (expr is ExprMinus)
             {
-                ExprPlus exprPlus = (ExprPlus)expr;
+                ExprMinus exprPlus = (ExprMinus)expr;
                 CheckExpr(statement, exprPlus.LeftExpr);
                 CheckExpr(statement, exprPlus.RightExpr);
             }

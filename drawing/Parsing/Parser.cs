@@ -150,91 +150,181 @@ namespace SPA.Parsing
 
         public Assign CreateAssign(ArrayList stringsList)
         {
-            if ((stringsList[^1] as string)!.EndsWith(';') && stringsList[1] as string == "=" && IsNameAccepted(stringsList[0] as string))
+            List<char> mathSigns = new List<char>();
+            List<string> variables = new List<string>();
+
+            string equation = "";
+            foreach(string s in stringsList)
             {
-                string varName = (stringsList[0] as string)!;
-                Expr? expr = CreateExpr(stringsList.GetRange(2, stringsList.Count-2));
-                return new Assign(lineNumber, varName, expr);
+                equation += s;
             }
-            throw new Exception("Nieprawidłowo zdefiniowane przypisanie! Linia: " + lineNumber);
-        }
+            equation = equation.Remove(equation.Length-1);
 
-        public Expr? CreateExpr(ArrayList stringsList)
-        {
-            ArrayList exprType = new ArrayList();
-            ArrayList vars = new ArrayList();
+            char[] operators = { '+', '-', '*', '='};
+            string currentVariable = "";
 
-            int semicolonPos = FindSemicolon(stringsList);
-
-            for (int i=0; i<stringsList.Count; i++)
+            foreach (char c in equation)
             {
-                if(i%2 == 0)
+                if (Array.Exists(operators, element => element == c))
                 {
-                    if (i == semicolonPos)
+                    if (!string.IsNullOrEmpty(currentVariable))
                     {
-                        if(IsNameAccepted((stringsList[i] as string)![..^1]))
-                        {
-                            vars.Add(new Variable((stringsList[i] as string)![..^1], lineNumber));
-                        }
-                        else
-                        {
-                            try
-                            {
-                                int constant = int.Parse((stringsList[i] as string)![..^1]);
-                                vars.Add(new Constant(constant, lineNumber));
-                            }
-                            catch(Exception)
-                            {
-                                throw new Exception("Nieprawidłowa nazwa zmiennej! " + "[" + lineNumber + "]");
-                            }
-                        }
+                        variables.Add(currentVariable);
+                        currentVariable = "";
                     }
-                    else if (IsNameAccepted(stringsList[i] as string))
-                    {
-                        vars.Add(new Variable((stringsList[i] as string)!, lineNumber));
-                    }
-                    else
-                    {
-                        try
-                        {
-                            int constant = int.Parse((stringsList[i] as string)!);
-                            vars.Add(new Constant(constant, lineNumber));
-                        }
-                        catch (Exception)
-                        {
-                            throw new Exception("Nieprawidłowa nazwa zmiennej! " + "[" + lineNumber + "]");
-                        }
-                    }
+                    mathSigns.Add(c);
                 }
                 else
                 {
-                    if (stringsList[i] as string == "+")
-                    {
-                        exprType.Add(new ExprPlus(lineNumber));
-                    }
-                    else
-                    {
-                        throw new Exception("Nieprawidłowe równanie! " + "[" + lineNumber + "]");
-                    }
+                    currentVariable += c;
                 }
             }
 
-            if (exprType.Count > 0)
+            if (!string.IsNullOrEmpty(currentVariable))
             {
-                for (int i = 0; i < exprType.Count-1; i++)
-                {
-                    (exprType[i] as ExprPlus)!.RightExpr = exprType[i+1] as ExprPlus;
-                }
-                (exprType[^1] as ExprPlus)!.RightExpr = vars[^1] as Factor;
-
-                for (int i = 0; i < vars.Count - 1; i++)
-                {
-                    (exprType[i] as ExprPlus)!.LeftExpr = vars[i] as Factor;
-                }
-            }else if (exprType.Count == 0 && vars.Count==1) {
-                return vars[0] as Expr;
+                variables.Add(currentVariable);
             }
-            return exprType[0] as Expr;
+
+            string tmp = variables[0];
+            if(variables.Count > 0)
+            {
+                variables.RemoveAt(0);
+            }
+            if(mathSigns.Count > 0)
+            {
+                mathSigns.RemoveAt(0);
+            }
+
+            return new Assign(lineNumber, tmp, CreateExpr(variables, mathSigns));
+        }
+
+
+        public Expr CreateExpr(List<string> variables, List<char> mathSigns)
+        {
+            Expr temp;
+            List<Expr> variablesAndConstants = new();
+            foreach (string str in variables)
+            {
+                variablesAndConstants.Add(int.TryParse(str, out _) ?
+                    new Constant(int.Parse(str), lineNumber) :
+                    new Variable(str, lineNumber));
+            }
+            if(variablesAndConstants.Count == 1) { 
+                return variablesAndConstants[0];
+            }
+            else
+            {
+                temp = mathSigns[0] switch
+                {
+                    '+' => new ExprPlus(lineNumber, variablesAndConstants[0]),
+                    '-' => new ExprMinus(lineNumber, variablesAndConstants[0]),
+                    '*' => new ExprTimes(lineNumber, variablesAndConstants[0]),
+                    _ => throw new Exception("Nieobsługiwany znak w równaniu!")
+                };
+
+                bool flag = true;
+
+                for (int i=1; i<mathSigns.Count;)
+                {
+                    switch(mathSigns[i])
+                    {
+                        case '+':
+                            {
+                                if (flag)
+                                {
+                                    if (temp is ExprPlus)
+                                    {
+                                        (temp as ExprPlus)!.RightExpr = variablesAndConstants[i];
+                                    }
+                                    else if (temp is ExprMinus)
+                                    {
+                                        (temp as ExprMinus)!.RightExpr = variablesAndConstants[i];
+                                    }
+                                    else // ExprTimes
+                                    {
+                                        (temp as ExprTimes)!.RightExpr = variablesAndConstants[i];
+                                    }
+                                }
+                                temp = new ExprPlus(lineNumber, temp);
+                                flag = true;
+                                i++;
+                                break;
+                            }
+                        case '-':
+                            {
+                                if (flag)
+                                {
+                                    if (temp is ExprPlus)
+                                    {
+                                        (temp as ExprPlus)!.RightExpr = variablesAndConstants[i];
+                                    }
+                                    else if (temp is ExprMinus)
+                                    {
+                                        (temp as ExprMinus)!.RightExpr = variablesAndConstants[i];
+                                    }
+                                    else // ExprTimes
+                                    {
+                                        (temp as ExprTimes)!.RightExpr = variablesAndConstants[i];
+                                    }
+                                }
+                                temp = new ExprMinus(lineNumber, temp);
+                                flag = true;
+                                i++;
+                                break;
+                            }
+                        case '*':
+                            {
+                                Expr? tmp = null;
+                                if (temp is ExprPlus)
+                                {
+                                    tmp = new ExprTimes(lineNumber, variablesAndConstants[i++]);
+                                    (temp as ExprPlus)!.RightExpr = tmp;
+                                }
+                                else if (temp is ExprMinus)
+                                {
+                                    tmp = new ExprTimes(lineNumber, variablesAndConstants[i++]);
+                                    (temp as ExprMinus)!.RightExpr = tmp;
+                                }
+                                else // ExprTimes
+                                {
+                                    tmp = new ExprTimes(lineNumber, variablesAndConstants[i++]);
+                                    (temp as ExprTimes)!.RightExpr = tmp;
+                                }
+                                Expr? tmp1 = tmp;
+                                while(i < mathSigns.Count && mathSigns[i] == '*')
+                                {
+                                    (tmp1 as ExprTimes)!.RightExpr = new ExprTimes(lineNumber, variablesAndConstants[i++]);
+                                    tmp1 = (tmp1 as ExprTimes)!.RightExpr;
+                                }
+                                (tmp1 as ExprTimes)!.RightExpr = variablesAndConstants[i];
+                                flag = false;
+                                break;
+                            }
+                    }
+                }
+                if (temp is ExprPlus)
+                {
+                    if ((temp as ExprPlus)!.RightExpr == null)
+                    {
+                        (temp as ExprPlus)!.RightExpr = variablesAndConstants[^1];
+                    }
+                }
+                else if (temp is ExprMinus)
+                {
+                    if ((temp as ExprMinus)!.RightExpr == null)
+                    {
+                        (temp as ExprMinus)!.RightExpr = variablesAndConstants[^1];
+                    }
+                }
+                else // ExprTimes
+                {
+                    if ((temp as ExprTimes)!.RightExpr == null)
+                    {
+                        (temp as ExprTimes)!.RightExpr = variablesAndConstants[^1];
+                    }
+                }
+            }
+            return temp;
         }
 
         public int Parse(string code) {
